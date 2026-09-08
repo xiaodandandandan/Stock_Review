@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9.8 全市场·板块资金流动</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #FAFAF7;
+  font-family: "PingFang SC", "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #1A1A1A;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+.card {
+  width: 100%;
+  max-width: 720px;
+  background: #FAFAF7;
+  padding: 0 20px;
+}
+/* 标题区 */
+.tag-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.tag-red {
+  background: #FF2442;
+  color: #fff;
+  padding: 8px 22px;
+  border-radius: 22px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.tag-date {
+  border: 2px solid rgba(112,120,132,0.3);
+  color: #707884;
+  padding: 7px 20px;
+  border-radius: 22px;
+  font-size: 14px;
+}
+.title-main {
+  font-size: 38px;
+  font-weight: 800;
+  margin-top: 14px;
+  letter-spacing: -1px;
+}
+.title-bar {
+  width: 130px;
+  height: 4px;
+  background: #FF2442;
+  border-radius: 2px;
+  margin: 8px 0 6px 0;
+}
+.title-sub {
+  font-size: 15px;
+  color: #707884;
+  margin-bottom: 18px;
+}
+/* 板块卡片 */
+.section-card {
+  background: #fff;
+  border: 1px solid #E8E8E3;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px 18px;
+  border-bottom: 1px solid #F0F0EB;
+}
+.section-header-left { display: flex; align-items: center; gap: 12px; }
+.dot-red { width: 12px; height: 12px; border-radius: 50%; background: #D93A3F; }
+.dot-green { width: 12px; height: 12px; border-radius: 50%; background: #2B8A5A; }
+.section-title { font-size: 18px; font-weight: 700; }
+.section-sub { font-size: 12px; color: #707884; }
+/* 条形图区 */
+.bar-list { padding: 6px 14px 14px 14px; }
+.bar-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 68px;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  animation: slideIn 0.4s ease-out both;
+  transition: background 0.15s;
+  border-radius: 6px;
+  padding: 0 4px;
+}
+.bar-row:hover { background: rgba(0,0,0,0.025); }
+.bar-name {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: #1A1A1A;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.bar-area {
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bar-track {
+  position: absolute;
+  left: 0; right: 0;
+  height: 24px;
+  background: #EEEEE9;
+  border-radius: 5px;
+}
+.center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(112,120,132,0.35);
+  z-index: 2;
+}
+.bar-fill {
+  position: absolute;
+  top: 0;
+  height: 24px;
+  border-radius: 5px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.bar-fill.pos {
+  left: 50%;
+  background: linear-gradient(90deg, #D93A3F, #FF5A6A);
+}
+.bar-fill.neg {
+  right: 50%;
+  background: linear-gradient(270deg, #2B8A5A, #3DBB7A);
+}
+.bar-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", "SF Pro Text", system-ui, sans-serif;
+}
+.bar-val.pos { color: #D93A3F; text-align: left; }
+.bar-val.neg { color: #2B8A5A; text-align: right; }
+.bar-note {
+  font-size: 11px;
+  color: #707884;
+  margin-left: 80px;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+/* 结论区 */
+.insights-card {
+  background: #fff;
+  border: 1px solid #E8E8E3;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.insights-bar {
+  position: absolute;
+  left: 0; top: 14px; bottom: 14px;
+  width: 5px;
+  background: #FF2442;
+  border-radius: 0 3px 3px 0;
+}
+.insights-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; padding-left: 16px; }
+.insight-item {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  padding: 3px 0 3px 16px;
+}
+/* 底部 */
+.footer {
+  margin-top: 14px;
+  font-size: 12px;
+  color: rgba(112,120,132,0.7);
+  line-height: 1.5;
+  padding-bottom: 20px;
+}
+/* 图例 */
+.legend {
+  display: flex;
+  gap: 24px;
+  padding: 8px 18px 4px 18px;
+  font-size: 12px;
+  color: #707884;
+}
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tag-row">
+    <span class="tag-red">全市场 · 板块资金流</span>
+    <span class="tag-date">2026.09.08 收盘</span>
+  </div>
+  <div class="title-main">周期流入 · 科技失血</div>
+  <div class="title-bar"></div>
+  <div class="title-sub">31个申万一级行业 · 化工+44亿居首 · 电子-19.5亿垫底</div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="dot-red"></span>
+        <span class="section-title">板块资金净流入排行</span>
+      </div>
+      <span class="section-sub">31板块 · 净主动买入额(亿元)</span>
+    </div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#D93A3F"></span>资金净流入</span>
+      <span><span class="legend-dot" style="background:#2B8A5A"></span>资金净流出</span>
+    </div>
+    <div class="bar-list" id="barList"></div>
+  </div>
+
+  <div class="insights-card">
+    <div class="insights-bar"></div>
+    <div class="insights-title">核心结论</div>
+    <div class="insight-item">① 资源周期称霸：化工+有色+石化合计净流入116亿，涨价主线全市场共识</div>
+    <div class="insight-item">② 科技成长失血：电子-19.5+计算机-9.0+通信-3.1合计-31.6亿，为最大流出区</div>
+    <div class="insight-item">③ 防御+高股息受捧：公用事业+25.4、银行+15.4、煤炭+8.6，避险情绪升温</div>
+    <div class="insight-item">④ 风格切换信号：周期/资源净流入 vs 科技成长净流出，市场从成长转向价值</div>
+  </div>
+
+  <div class="footer">
+    口径：申万一级行业 · 净主动买入额(合计) · 全市场全量A股<br>
+    数据：同花顺 iFinD ｜ 仅供学习参考，不构成投资建议
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {name:'基础化工',value:44.18,note:'化肥/民爆/磷化工/有机硅涨价周期'},
+  {name:'有色金属',value:41.23,note:'铜/铝/锂/稀土·资源品抢筹'},
+  {name:'石油石化',value:31.09,note:'油服/炼化·油价上行+改革预期'},
+  {name:'公用事业',value:25.42,note:'电力/燃气·防御属性受捧'},
+  {name:'医药生物',value:23.52,note:'原料药/中药/生物·估值修复'},
+  {name:'钢铁',value:18.02,note:'钢材涨价+并购重组'},
+  {name:'银行',value:15.39,note:'国有大行/城商行·高股息防御'},
+  {name:'国防军工',value:13.03,note:'航天/兵器·板块轮动补涨'},
+  {name:'建筑装饰',value:12.79,note:'基建央企/地方国企'},
+  {name:'房地产',value:11.77,note:'地产服务+开发·政策修复'},
+  {name:'煤炭',value:8.62,note:'动力煤/焦煤·高分红'},
+  {name:'环保',value:4.37,note:'水处理/固废'},
+  {name:'建筑材料',value:2.95,note:'水泥/玻纤'},
+  {name:'纺织服饰',value:2.61,note:'出口链+品牌'},
+  {name:'交通运输',value:1.89,note:'港口/公路'},
+  {name:'美容护理',value:-0.07,note:'化妆品/医美微跌'},
+  {name:'社会服务',value:-0.08,note:'旅游/教育微跌'},
+  {name:'轻工制造',value:-0.16,note:'造纸/家居小幅流出'},
+  {name:'商贸零售',value:-0.22,note:'百货/超市微跌'},
+  {name:'综合',value:-0.52,note:'综合类小幅流出'},
+  {name:'家用电器',value:-0.94,note:'白电/厨电回调'},
+  {name:'食品饮料',value:-1.29,note:'白酒/食品回调'},
+  {name:'农林牧渔',value:-1.32,note:'养殖/种植流出'},
+  {name:'传媒',value:-1.48,note:'出版/影视获利了结'},
+  {name:'汽车',value:-2.16,note:'整车/零部件分化'},
+  {name:'通信',value:-3.14,note:'光通信/射频流出'},
+  {name:'非银金融',value:-4.01,note:'券商/保险调整'},
+  {name:'电力设备',value:-5.02,note:'光伏/风电/储能失血'},
+  {name:'机械设备',value:-5.31,note:'通用/专用设备流出'},
+  {name:'计算机',value:-9.02,note:'软件/IT服务大幅流出'},
+  {name:'电子',value:-19.48,note:'半导体/消费电子重挫·科技最大失血'},
+];
+
+const maxAbs = Math.max(...DATA.map(d => Math.abs(d.value)));
+const container = document.getElementById('barList');
+
+DATA.forEach((d, i) => {
+  const row = document.createElement('div');
+  row.className = 'bar-row';
+  row.style.animationDelay = (i * 25) + 'ms';
+
+  const isPos = d.value >= 0;
+  const ratio = Math.abs(d.value) / maxAbs;
+  const pct = (ratio * 50).toFixed(1);
+
+  const valStr = (isPos ? '+' : '') + d.value.toFixed(2) + '亿';
+
+  row.innerHTML = `
+    <div class="bar-name">${d.name}</div>
+    <div class="bar-area">
+      <div class="bar-track"></div>
+      <div class="center-line"></div>
+      <div class="bar-fill ${isPos ? 'pos' : 'neg'}" style="width: ${pct}%" title="${d.note}"></div>
+    </div>
+    <div class="bar-val ${isPos ? 'pos' : 'neg'}">${valStr}</div>
+  `;
+
+  container.appendChild(row);
+});
+</script>
+</body>
+</html>
