@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/500.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/900.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#eef1f5; font-family:'Noto Sans SC',sans-serif; color:#1c2430; font-variant-numeric: tabular-nums; }
+  .page { width:900px; margin:0 auto; background:#eef1f5; }
+
+  /* ---------- header ---------- */
+  .hero { background:linear-gradient(135deg,#0c1c38 0%,#13294e 55%,#1a3a6e 100%); color:#fff; padding:44px 48px 36px; position:relative; overflow:hidden; }
+  .hero .deco { position:absolute; right:-90px; top:-90px; width:340px; height:340px; border-radius:50%; border:44px solid rgba(255,255,255,.045); }
+  .hero .deco2 { position:absolute; right:60px; bottom:-130px; width:240px; height:240px; border-radius:50%; border:30px solid rgba(217,178,95,.08); }
+  .hero-top { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .tag { font-size:13px; letter-spacing:2px; color:#d9b25f; border:1px solid rgba(217,178,95,.55); padding:4px 12px; border-radius:3px; }
+  .tag.dark { color:rgba(255,255,255,.75); border-color:rgba(255,255,255,.28); }
+  h1 { font-size:44px; font-weight:900; letter-spacing:3px; margin:18px 0 10px; position:relative; z-index:1; }
+  h1 .accent { color:#e8c37e; }
+  .hero-sub { font-size:16px; color:rgba(255,255,255,.82); letter-spacing:1px; position:relative; z-index:1; }
+  .hero-sub b { color:#e8c37e; font-weight:700; }
+  .hero-line { width:64px; height:5px; background:linear-gradient(90deg,#e8c37e,#e0392e); border-radius:3px; margin-top:20px; }
+
+  /* ---------- stats ---------- */
+  .stats { display:flex; gap:14px; padding:22px 32px 6px; }
+  .stat { flex:1; background:#fff; border-radius:10px; padding:18px 16px 16px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); position:relative; overflow:hidden; }
+  .stat::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+  .stat.v::before { background:#7c8aa0; }
+  .stat.in::before { background:#e0392e; }
+  .stat.out::before { background:#0a9c5b; }
+  .stat.net::before { background:#13294e; }
+  .stat .k { font-size:13px; color:#8a93a3; margin-bottom:8px; }
+  .stat .v { font-size:30px; font-weight:900; line-height:1; }
+  .stat .v small { font-size:14px; font-weight:500; color:#8a93a3; margin-left:4px; }
+  .stat .s { font-size:12px; color:#9aa3b2; margin-top:7px; }
+  .c-up { color:#d92c20; } .c-down { color:#06894f; } .c-mid { color:#13294e; }
+
+  /* ---------- section ---------- */
+  .sec { padding:26px 32px 8px; }
+  .sec-head { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
+  .sec-no { font-size:13px; font-weight:900; color:#d9b25f; letter-spacing:1px; }
+  .sec-title { font-size:22px; font-weight:900; color:#13294e; letter-spacing:1px; }
+  .sec-note { font-size:12px; color:#9aa3b2; margin-left:auto; }
+
+  /* ---------- diverging bars ---------- */
+  .chart { background:#fff; border-radius:10px; border:1px solid #e6e9ef; padding:16px 20px 10px; box-shadow:0 2px 8px rgba(16,32,64,.05); }
+  .crow { display:flex; align-items:center; height:29px; }
+  .crow .name { width:96px; font-size:13px; font-weight:700; color:#2a3648; flex:none; }
+  .crow .cnt { width:34px; flex:none; font-size:11px; color:#9aa3b2; }
+  .crow .zone { flex:1; height:100%; position:relative; }
+  .zone .axis { position:absolute; left:50%; top:3px; bottom:3px; width:1px; background:#e3e7ee; }
+  .zone .bar { position:absolute; top:8px; height:13px; border-radius:2px; }
+  .zone .bar.pos { left:50%; background:linear-gradient(90deg,#f06a5e,#e0392e); }
+  .zone .bar.neg { right:50%; background:linear-gradient(270deg,#3ec58a,#0a9c5b); }
+  .crow .val { width:86px; flex:none; text-align:right; font-size:13px; font-weight:700; }
+  .chart-legend { display:flex; justify-content:center; gap:26px; padding:8px 0 6px; font-size:12px; color:#8a93a3; }
+  .lg { display:flex; align-items:center; gap:6px; }
+  .lg i { width:18px; height:8px; border-radius:2px; display:inline-block; }
+
+  /* ---------- sector cards ---------- */
+  .cards { display:flex; flex-direction:column; gap:14px; }
+  .card { background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); overflow:hidden; }
+  .card-h { display:flex; align-items:center; gap:10px; padding:13px 18px; background:#f7f9fc; border-bottom:1px solid #edf0f5; }
+  .card-h.pin { border-left:4px solid #e0392e; }
+  .card-h.nin { border-left:4px solid #0a9c5b; }
+  .card-h .sname { font-size:17px; font-weight:900; color:#13294e; letter-spacing:1px; }
+  .card-h .scnt { font-size:11px; color:#68758a; background:#eef1f6; border-radius:10px; padding:2px 9px; }
+  .card-h .sflow { margin-left:auto; font-size:16px; font-weight:900; }
+  .cols { display:grid; grid-template-columns:158px 1fr 96px 116px; padding:7px 18px; font-size:11px; color:#9aa3b2; border-bottom:1px solid #f0f2f6; }
+  .cols div:nth-child(3),.cols div:nth-child(4) { text-align:right; }
+  .row { display:grid; grid-template-columns:158px 1fr 96px 116px; align-items:center; padding:9px 18px; border-bottom:1px solid #f4f6f9; }
+  .row:nth-child(even) { background:#fafbfd; }
+  .row:last-child { border-bottom:none; }
+  .row .nm { line-height:1.25; }
+  .row .nm b { font-size:15px; font-weight:700; color:#1c2430; }
+  .row .nm .badge2 { font-size:10px; color:#8a6417; background:#fdf3dd; border-radius:8px; padding:1px 6px; margin-left:6px; font-weight:500; vertical-align:1px; }
+  .row .nm span { display:block; font-size:11px; color:#a5adbb; margin-top:1px; }
+  .row .sub { font-size:12px; color:#68758a; }
+  .row .pct { text-align:right; }
+  .row .pct i { font-style:normal; font-size:13px; font-weight:700; border-radius:4px; padding:3px 8px; }
+  .i-up { color:#d92c20; background:#fdeceb; }
+  .i-down { color:#06894f; background:#e6f5ec; }
+  .row .fl { text-align:right; font-size:14px; font-weight:900; }
+
+  /* ---------- insights ---------- */
+  .tips { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .tip { background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); padding:16px 18px; }
+  .tip .t { font-size:14px; font-weight:900; margin-bottom:7px; color:#13294e; display:flex; align-items:center; gap:8px; }
+  .tip .t .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+  .tip p { font-size:12.5px; line-height:1.75; color:#4a5568; }
+  .tip p b.r { color:#d92c20; } .tip p b.g { color:#06894f; }
+
+  /* ---------- footer ---------- */
+  .foot { margin:26px 32px 34px; background:#13294e; border-radius:10px; color:rgba(255,255,255,.85); padding:18px 22px; }
+  .foot .ft { font-size:13px; font-weight:700; color:#e8c37e; margin-bottom:6px; }
+  .foot p { font-size:11.5px; line-height:1.8; color:rgba(255,255,255,.72); }
+  .foot .disc { margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.14); color:rgba(255,255,255,.55); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="deco"></div><div class="deco2"></div>
+    <div class="hero-top">
+      <span class="tag">同花顺 iFinD</span><span class="tag dark">龙虎榜数据</span><span class="tag dark">2026-09-08 · 星期二 · 收盘后</span>
+    </div>
+    <h1>龙虎榜个股 <span class="accent">·</span> 板块资金全景</h1>
+    <div class="hero-sub"><b>55</b> 只上榜个股按同花顺行业整合为 <b>23</b> 个板块 ｜ 标注当日涨幅与主力资金流向</div>
+    <div class="hero-line"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat v"><div class="k">上榜个股</div><div class="v c-mid">55<small>只</small></div><div class="s">欧福蛋业两度上榜</div></div>
+    <div class="stat in"><div class="k">主力净流入个股</div><div class="v c-up">22<small>只</small></div><div class="s">合计 +12.26 亿元</div></div>
+    <div class="stat out"><div class="k">主力净流出个股</div><div class="v c-down">33<small>只</small></div><div class="s">合计 -19.62 亿元</div></div>
+    <div class="stat net"><div class="k">主力资金整体</div><div class="v c-down">-7.35<small>亿元</small></div><div class="s">净流出</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-no">01</span><span class="sec-title">板块资金分布</span><span class="sec-note">单位：亿元 ｜ 按主力净流入排序</span></div>
+    <div class="chart" id="chart"></div>
+    <div class="chart-legend">
+      <span class="lg"><i style="background:linear-gradient(90deg,#f06a5e,#e0392e)"></i>净流入（右）</span>
+      <span class="lg"><i style="background:linear-gradient(270deg,#3ec58a,#0a9c5b)"></i>净流出（左）</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-no">02</span><span class="sec-title">分板块个股明细</span><span class="sec-note">组内按主力净流入排序 ｜ 红涨绿跌</span></div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-no">03</span><span class="sec-title">盘面要点</span></div>
+    <div class="tips">
+      <div class="tip"><div class="t"><span class="dot" style="background:#e0392e"></span>净流入最集中</div><p>基础化工 <b class="r">+3.56亿</b>：高争民爆跌 9.71% 仍获主力 <b class="r">+2.73亿</b>；房地产 <b class="r">+2.03亿</b>：我爱我家 +1.83亿。</p></div>
+      <div class="tip"><div class="t"><span class="dot" style="background:#0a9c5b"></span>净流出最重</div><p>电子 <b class="g">-4.99亿</b>、电力设备 <b class="g">-4.36亿</b>：华盛昌涨停仍遭出货 -3.64亿；中石科技大跌 15.46% 且流出 2.61亿。</p></div>
+      <div class="tip"><div class="t"><span class="dot" style="background:#e8c37e"></span>农林牧渔上榜最多</div><p>7 只上榜但板块整体流出 <b class="g">-2.48亿</b>，种业、饲料普遍“上涨 + 流出”，警惕高位派发。</p></div>
+      <div class="tip"><div class="t"><span class="dot" style="background:#13294e"></span>医药链热度延续</div><p>医药生物 6 只上榜，以医疗研发外包为主，资金面总体均衡（+0.01亿）。</p></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="ft">口径说明</div>
+    <p>① 数据为 2026-09-08 交易日收盘后维度；② 涨跌幅为前复权口径；③ 资金列为主力资金净流入额（正 = 净流入，负 = 净流出）；④ 板块归类采用同花顺行业分类（展示至二级/三级细分）；⑤ 金额单位：亿元 / 万元。</p>
+    <p class="disc">数据来源：同花顺 iFinD（search_stocks / get_stock_performance）｜ 以上内容基于公开数据，不构成投资建议。</p>
+  </div>
+
+</div>
+
+<script>
+const SECTORS = [
+["基础化工",35588,[["高争民爆","002827.SZ","民爆用品",-9.71,27302],["金正大","002470.SZ","农化制品-复合肥",10.00,8830],["粤桂股份","000833.SZ","非金属材料",10.02,6077],["潞化科技","600691.SH","农化制品-氮肥",10.16,6239],["百合花","603823.SH","化学制品-涂料油墨",9.99,-8038],["红四方","603395.SH","农化制品-复合肥",4.03,-1919],["集泰股份","002909.SZ","化学制品-有机硅",9.96,-1633],["肯特股份","301591.SZ","塑料制品",-5.38,-1271]]],
+["房地产",20302,[["我爱我家","000560.SZ","房地产服务",9.90,18323],["盈新发展","000620.SZ","住宅开发",9.93,1980]]],
+["综合",11764,[["亚泰集团","600881.SH","综合",10.11,11764]]],
+["建筑装饰",5969,[["ST富煌","002743.SZ","专业工程",-10.02,6409],["*ST美芝","002856.SZ","装饰园林",3.00,-440]]],
+["传媒",3756,[["上海电影","601595.SH","影视院线",9.99,4264],["中信出版","300788.SZ","出版",19.99,2669],["读者传媒","603999.SH","出版",9.95,-2450],["欢瑞世纪","000892.SZ","影视院线",-4.78,-728]]],
+["非银金融",3729,[["翠微股份","603123.SH","多元金融",4.42,3729]]],
+["煤炭",3089,[["云煤能源","600792.SH","焦炭加工",10.10,3089]]],
+["国防军工",1704,[["博云新材","002297.SZ","航空装备",7.10,1704]]],
+["钢铁",859,[["马矿股份","601123.SH","冶钢原料",0.18,859]]],
+["社会服务",247,[["桂林旅游","000978.SZ","自然景点",10.03,247]]],
+["医药生物",84,[["奥浦迈","688293.SH","医疗研发外包",20.00,2159],["万邦医药","301520.SZ","医疗研发外包",8.71,2116],["近岸蛋白","688137.SH","生物制品",15.33,1321],["东亚药业","605177.SH","原料药",10.02,867],["百花医药","600721.SH","医疗研发外包",2.16,-3444],["千金药业","600479.SH","中药",6.85,-2936]]],
+["机械设备",-840,[["花溪科技","920895.BJ","农用机械",6.71,-840]]],
+["汽车",-1275,[["杰锋动力","920269.BJ","底盘与发动机系统",-13.09,-1275]]],
+["商贸零售",-1606,[["百大集团","600865.SH","百货零售",10.01,-1606]]],
+["美容护理",-2721,[["维琪科技","920176.BJ","化妆品",5.22,-2721]]],
+["家用电器",-2971,[["金海高科","603311.SH","家电零部件",-6.98,-2971]]],
+["有色金属",-3163,[["金钛股份","920071.BJ","其他小金属",-3.88,-3163]]],
+["通信",-3707,[["华脉科技","603042.SH","通信线缆及配套",9.98,-3707]]],
+["计算机",-8314,[["竞业达","003005.SZ","IT服务",-2.40,-3627],["博瑞传播","600880.SH","软件开发-垂直应用",10.10,-2518],["新炬网络","605398.SH","IT服务",-9.32,-2169]]],
+["交通运输",-17632,[["北部湾港","000582.SZ","港口",-8.28,-17632]]],
+["农林牧渔",-24821,[["欧福蛋业","920371.BJ","其他农产品加工",29.91,10163,2],["金健米业","600127.SH","粮油加工",9.31,826],["万向德农","600371.SH","种子生产",5.04,-463],["神农种业","300189.SZ","种子生产",-0.52,-9267],["亚盛集团","600108.SH","其他种植业",10.00,-1583],["新赛股份","600540.SH","其他种植业",-2.53,-10341],["播恩集团","001366.SZ","畜禽饲料",3.67,-14156]]],
+["电力设备",-43636,[["*ST沐邦","603398.SH","光伏设备-硅料硅片",-6.55,-1503],["中远通","301516.SZ","其他电源设备",-2.65,-2492],["华汇智能","920289.BJ","电池-锂电专用设备",-4.57,-3196],["华盛昌","002980.SZ","电网设备-电气自控",10.00,-36445]]],
+["电子",-49949,[["中京电子","002579.SZ","元件-印制电路板",9.99,1695],["领先股份","603991.SH","半导体材料",6.01,-4393],["华体科技","603679.SH","光学光电子-LED",10.01,-2619],["科森科技","603626.SH","消费电子零部件及组装",9.99,-18540],["中石科技","300684.SZ","电子化学品",-15.46,-26092]]]
+];
+
+function fmtFlow(v){
+  const s = v>0?'+':(v<0?'-':''), a=Math.abs(v);
+  return s + (a>=10000 ? (a/10000).toFixed(2)+'亿' : Math.round(a)+'万');
+}
+function pctCls(p){ return p>=0?'i-up':'i-down'; }
+function pctTxt(p){ return (p>0?'+':'')+p.toFixed(2)+'%'; }
+function flowCls(v){ return v>=0?'c-up':'c-down'; }
+
+/* ---- section 01: diverging bars ---- */
+const MAXABS = Math.max(...SECTORS.map(s=>Math.abs(s[1])));
+const chart = document.getElementById('chart');
+SECTORS.forEach(([name,flow])=>{
+  const w = Math.max(3, Math.abs(flow)/MAXABS*172);
+  const r = document.createElement('div'); r.className='crow';
+  r.innerHTML = `<div class="name">${name}</div><div class="cnt">${SECTORS.find(s=>s[0]===name)[2].length}只</div>`
+    + `<div class="zone"><div class="axis"></div>`
+    + (flow>=0 ? `<div class="bar pos" style="width:${w}px"></div>` : `<div class="bar neg" style="width:${w}px"></div>`)
+    + `</div><div class="val ${flowCls(flow)}">${fmtFlow(flow)}</div>`;
+  chart.appendChild(r);
+});
+
+/* ---- section 02: sector cards ---- */
+const cards = document.getElementById('cards');
+SECTORS.forEach(([name,flow,stocks])=>{
+  const card = document.createElement('div'); card.className='card';
+  let rows = stocks.map(([n,c,sub,chg,f,times])=>{
+    const badge = times?`<span class="badge2">${times}次上榜</span>`:'';
+    return `<div class="row">
+      <div class="nm"><b>${n}</b>${badge}<span>${c}</span></div>
+      <div class="sub">${sub}</div>
+      <div class="pct"><i class="${pctCls(chg)}">${pctTxt(chg)}</i></div>
+      <div class="fl ${flowCls(f)}">${fmtFlow(f)}</div>
+    </div>`;
+  }).join('');
+  card.innerHTML = `<div class="card-h ${flow>=0?'pin':'nin'}">
+      <span class="sname">${name}</span><span class="scnt">${stocks.length} 只上榜</span>
+      <span class="sflow ${flowCls(flow)}">${fmtFlow(flow)}</span>
+    </div>
+    <div class="cols"><div>个股 / 代码</div><div>细分板块</div><div>当日涨跌幅</div><div>主力净流入</div></div>
+    ${rows}`;
+  cards.appendChild(card);
+});
+document.title='ok';
+</script>
+</body>
+</html>
