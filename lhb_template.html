@@ -106,19 +106,14 @@
   <div class="hero">
     <div class="deco"></div><div class="deco2"></div>
     <div class="hero-top">
-      <span class="tag">同花顺 iFinD</span><span class="tag dark">龙虎榜数据</span><span class="tag dark">2026-09-08 · 星期二 · 收盘后</span>
+      <span class="tag">同花顺 iFinD</span><span class="tag dark">龙虎榜数据</span><span class="tag dark" id="date-tag"></span>
     </div>
-    <h1>龙虎榜个股 <span class="accent">·</span> 板块资金全景</h1>
-    <div class="hero-sub"><b>55</b> 只上榜个股按同花顺行业整合为 <b>23</b> 个板块 ｜ 标注当日涨幅与主力资金流向</div>
+    <h1 id="h1">龙虎榜 <span class="accent">·</span> 板块资金分布</h1>
+    <div class="hero-sub" id="hero-sub"></div>
     <div class="hero-line"></div>
   </div>
 
-  <div class="stats" id="stats">
-    <div class="stat v"><div class="k">上榜个股</div><div class="v c-mid">55<small>只</small></div><div class="s">欧福蛋业两度上榜</div></div>
-    <div class="stat in"><div class="k">主力净流入个股</div><div class="v c-up">22<small>只</small></div><div class="s">合计 +12.26 亿元</div></div>
-    <div class="stat out"><div class="k">主力净流出个股</div><div class="v c-down">33<small>只</small></div><div class="s">合计 -19.62 亿元</div></div>
-    <div class="stat net"><div class="k">主力资金整体</div><div class="v c-down">-7.35<small>亿元</small></div><div class="s">净流出</div></div>
-  </div>
+  <div class="stats" id="stats"></div>
 
   <div class="sec" id="sec-flow">
     <div class="sec-head"><span class="sec-no">01</span><span class="sec-title">板块资金分布</span><span class="sec-note">单位：亿元 ｜ 按主力净流入排序</span></div>
@@ -136,48 +131,45 @@
 
   <div class="sec" id="sec-tips">
     <div class="sec-head"><span class="sec-no">03</span><span class="sec-title">盘面要点</span></div>
-    <div class="tips">
-      <div class="tip"><div class="t"><span class="dot" style="background:#e0392e"></span>净流入最集中</div><p>基础化工 <b class="r">+3.56亿</b>：高争民爆跌 9.71% 仍获主力 <b class="r">+2.73亿</b>；房地产 <b class="r">+2.03亿</b>：我爱我家 +1.83亿。</p></div>
-      <div class="tip"><div class="t"><span class="dot" style="background:#0a9c5b"></span>净流出最重</div><p>电子 <b class="g">-4.99亿</b>、电力设备 <b class="g">-4.36亿</b>：华盛昌涨停仍遭出货 -3.64亿；中石科技大跌 15.46% 且流出 2.61亿。</p></div>
-      <div class="tip"><div class="t"><span class="dot" style="background:#e8c37e"></span>农林牧渔上榜最多</div><p>7 只上榜但板块整体流出 <b class="g">-2.48亿</b>，种业、饲料普遍“上涨 + 流出”，警惕高位派发。</p></div>
-      <div class="tip"><div class="t"><span class="dot" style="background:#13294e"></span>医药链热度延续</div><p>医药生物 6 只上榜，以医疗研发外包为主，资金面总体均衡（+0.01亿）。</p></div>
-    </div>
+    <div class="tips" id="tips"></div>
   </div>
 
   <div class="foot">
     <div class="ft">口径说明</div>
-    <p>① 数据为 2026-09-08 交易日收盘后维度；② 涨跌幅为前复权口径；③ 资金列为主力资金净流入额（正 = 净流入，负 = 净流出）；④ 板块归类采用同花顺行业分类（展示至二级/三级细分）；⑤ 金额单位：亿元 / 万元。</p>
+    <p id="foot-note"></p>
     <p class="disc">数据来源：同花顺 iFinD（search_stocks / get_stock_performance）｜ 以上内容基于公开数据，不构成投资建议。</p>
   </div>
 
 </div>
 
+<!-- 数据注入占位：由 analyze_lhb.py 替换 __LHB_DATA__ -->
+<script id="lhb-data" type="application/json">__LHB_DATA__</script>
+
 <script>
-const SECTORS = [
-["基础化工",35588,[["高争民爆","002827.SZ","民爆用品",-9.71,27302],["金正大","002470.SZ","农化制品-复合肥",10.00,8830],["粤桂股份","000833.SZ","非金属材料",10.02,6077],["潞化科技","600691.SH","农化制品-氮肥",10.16,6239],["百合花","603823.SH","化学制品-涂料油墨",9.99,-8038],["红四方","603395.SH","农化制品-复合肥",4.03,-1919],["集泰股份","002909.SZ","化学制品-有机硅",9.96,-1633],["肯特股份","301591.SZ","塑料制品",-5.38,-1271]]],
-["房地产",20302,[["我爱我家","000560.SZ","房地产服务",9.90,18323],["盈新发展","000620.SZ","住宅开发",9.93,1980]]],
-["综合",11764,[["亚泰集团","600881.SH","综合",10.11,11764]]],
-["建筑装饰",5969,[["ST富煌","002743.SZ","专业工程",-10.02,6409],["*ST美芝","002856.SZ","装饰园林",3.00,-440]]],
-["传媒",3756,[["上海电影","601595.SH","影视院线",9.99,4264],["中信出版","300788.SZ","出版",19.99,2669],["读者传媒","603999.SH","出版",9.95,-2450],["欢瑞世纪","000892.SZ","影视院线",-4.78,-728]]],
-["非银金融",3729,[["翠微股份","603123.SH","多元金融",4.42,3729]]],
-["煤炭",3089,[["云煤能源","600792.SH","焦炭加工",10.10,3089]]],
-["国防军工",1704,[["博云新材","002297.SZ","航空装备",7.10,1704]]],
-["钢铁",859,[["马矿股份","601123.SH","冶钢原料",0.18,859]]],
-["社会服务",247,[["桂林旅游","000978.SZ","自然景点",10.03,247]]],
-["医药生物",84,[["奥浦迈","688293.SH","医疗研发外包",20.00,2159],["万邦医药","301520.SZ","医疗研发外包",8.71,2116],["近岸蛋白","688137.SH","生物制品",15.33,1321],["东亚药业","605177.SH","原料药",10.02,867],["百花医药","600721.SH","医疗研发外包",2.16,-3444],["千金药业","600479.SH","中药",6.85,-2936]]],
-["机械设备",-840,[["花溪科技","920895.BJ","农用机械",6.71,-840]]],
-["汽车",-1275,[["杰锋动力","920269.BJ","底盘与发动机系统",-13.09,-1275]]],
-["商贸零售",-1606,[["百大集团","600865.SH","百货零售",10.01,-1606]]],
-["美容护理",-2721,[["维琪科技","920176.BJ","化妆品",5.22,-2721]]],
-["家用电器",-2971,[["金海高科","603311.SH","家电零部件",-6.98,-2971]]],
-["有色金属",-3163,[["金钛股份","920071.BJ","其他小金属",-3.88,-3163]]],
-["通信",-3707,[["华脉科技","603042.SH","通信线缆及配套",9.98,-3707]]],
-["计算机",-8314,[["竞业达","003005.SZ","IT服务",-2.40,-3627],["博瑞传播","600880.SH","软件开发-垂直应用",10.10,-2518],["新炬网络","605398.SH","IT服务",-9.32,-2169]]],
-["交通运输",-17632,[["北部湾港","000582.SZ","港口",-8.28,-17632]]],
-["农林牧渔",-24821,[["欧福蛋业","920371.BJ","其他农产品加工",29.91,10163,2],["金健米业","600127.SH","粮油加工",9.31,826],["万向德农","600371.SH","种子生产",5.04,-463],["神农种业","300189.SZ","种子生产",-0.52,-9267],["亚盛集团","600108.SH","其他种植业",10.00,-1583],["新赛股份","600540.SH","其他种植业",-2.53,-10341],["播恩集团","001366.SZ","畜禽饲料",3.67,-14156]]],
-["电力设备",-43636,[["*ST沐邦","603398.SH","光伏设备-硅料硅片",-6.55,-1503],["中远通","301516.SZ","其他电源设备",-2.65,-2492],["华汇智能","920289.BJ","电池-锂电专用设备",-4.57,-3196],["华盛昌","002980.SZ","电网设备-电气自控",10.00,-36445]]],
-["电子",-49949,[["中京电子","002579.SZ","元件-印制电路板",9.99,1695],["领先股份","603991.SH","半导体材料",6.01,-4393],["华体科技","603679.SH","光学光电子-LED",10.01,-2619],["科森科技","603626.SH","消费电子零部件及组装",9.99,-18540],["中石科技","300684.SZ","电子化学品",-15.46,-26092]]]
-];
+const DATA = JSON.parse(document.getElementById('lhb-data').textContent);
+const SECTORS = DATA.sectors;
+
+document.getElementById('date-tag').textContent = DATA.meta.dateTag;
+document.getElementById('hero-sub').innerHTML =
+  `<b>${DATA.meta.nStocks}</b> 只上榜个股按同花顺行业整合为 <b>${DATA.meta.nSectors}</b> 个板块 ｜ 主力资金净流向一览`;
+document.getElementById('foot-note').innerHTML =
+  `① 数据为 ${DATA.meta.dateHyphen} 交易日收盘后维度；② 涨跌幅为前复权口径；③ 资金列为主力资金净流入额（正 = 净流入，负 = 净流出）；④ 板块归类采用同花顺行业分类（展示至二级/三级细分）；⑤ 金额单位：亿元 / 万元。`;
+
+/* ---- 统计卡片 ---- */
+DATA.stats.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'stat ' + s.bar;
+  el.innerHTML = `<div class="k">${s.k}</div><div class="v ${s.cls}">${s.v}<small>${s.unit}</small></div><div class="s">${s.s}</div>`;
+  document.getElementById('stats').appendChild(el);
+});
+
+/* ---- 盘面要点 ---- */
+DATA.tips.forEach(t => {
+  const el = document.createElement('div');
+  el.className = 'tip';
+  el.innerHTML = `<div class="t"><span class="dot" style="background:${t.color}"></span>${t.title}</div><p>${t.html}</p>`;
+  document.getElementById('tips').appendChild(el);
+});
 
 function fmtFlow(v){
   const s = v>0?'+':(v<0?'-':''), a=Math.abs(v);

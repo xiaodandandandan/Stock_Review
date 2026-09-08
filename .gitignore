@@ -4,3 +4,4 @@ __pycache__/
 .env
 fonts/
 node_modules/
+lhb_page_*.html

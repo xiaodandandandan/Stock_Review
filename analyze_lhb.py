@@ -9,8 +9,10 @@
   3. search_stocks 查询上榜个股所属同花顺行业（一/二/三级）
   4. 个别缺失数据的个股，用 get_stock_performance 单指标问句补足（每批≤5只）
   5. 按同花顺一级行业聚合主力资金，输出 Markdown 报告（板块汇总 + 个股明细）
+  6. 数据注入 lhb_template.html 生成数据页，调用 puppeteer 渲染两张长图：
+     ① 板块资金分布（统计 + 分布图 + 盘面要点） ② 分板块个股明细
 
-依赖：pip install requests
+依赖：pip install requests ｜ 长图另需 node + npm install（puppeteer、中文字体）
 认证：export IFIND_AUTH_TOKEN=<同花顺MCP密钥>
 用法：python analyze_lhb.py [YYYYMMDD]（默认今天）
 
@@ -18,8 +20,10 @@
     可微调问句表达后重试；涨跌幅为前复权口径，资金单位为元。
 """
 
+import glob
 import json
 import os
+import subprocess
 import sys
 import urllib3
 from datetime import date
@@ -237,20 +241,23 @@ def fmt_flow(v):
     return f"{sign}{a / 1e4:.0f}万"
 
 
-def build_report(day, stocks):
-    """步骤4-5：按一级行业聚合，生成 Markdown 报告"""
+def aggregate(stocks):
+    """按同花顺一级行业聚合：板块内按主力净流入降序，板块间按净流入合计降序"""
     sectors = {}
     for s in stocks.values():
-        top = s["行业"].split("-")[0]
-        sectors.setdefault(top, []).append(s)
-    # 板块内按主力净流入降序；板块间按净流入合计降序
+        sectors.setdefault(s["行业"].split("-")[0], []).append(s)
     for lst in sectors.values():
         lst.sort(key=lambda x: (x["净流入"] is None, -(x["净流入"] or 0)))
-    ordered = sorted(
+    return sorted(
         sectors.items(),
         key=lambda kv: sum(x["净流入"] or 0 for x in kv[1]),
         reverse=True,
     )
+
+
+def build_report(day, stocks):
+    """步骤4-5：按一级行业聚合，生成 Markdown 报告"""
+    ordered = aggregate(stocks)
 
     inflow = [s for s in stocks.values() if (s["净流入"] or 0) > 0]
     outflow = [s for s in stocks.values() if (s["净流入"] or 0) < 0]
@@ -295,6 +302,170 @@ def build_report(day, stocks):
     return "\n".join(lines)
 
 
+# ---------------- 长图生成（模板注入 + puppeteer 渲染两张图） ----------------
+
+WEEKDAYS = "一二三四五六日"
+
+
+def _find_chrome():
+    """定位无头浏览器：环境变量优先，其次探测 puppeteer 缓存"""
+    exe = os.getenv("PUPPETEER_EXECUTABLE_PATH")
+    if exe and os.path.exists(exe):
+        return exe
+    for pat in (
+        "~/.cache/puppeteer/chrome-headless-shell/*/chrome-headless-shell-linux64/chrome-headless-shell",
+        "~/.cache/puppeteer/chrome/*/chrome-linux64/chrome",
+    ):
+        hits = glob.glob(os.path.expanduser(pat))
+        if hits:
+            return sorted(hits)[-1]
+    return None
+
+
+def _sector_total(lst):
+    """板块主力净流入合计（元）"""
+    return sum(x["净流入"] or 0 for x in lst)
+
+
+def build_tips(ordered, stocks):
+    """自动生成盘面要点（富文本 HTML，颜色/标题/内容）"""
+    def chg(s):
+        return "暂无数据" if s["涨跌幅"] is None else f"{s['涨跌幅']:+.2f}%"
+
+    def flow(s):
+        return fmt_flow(s["净流入"])
+
+    total = _sector_total
+    tips = []
+    # 1) 净流入最集中：净流入前两大板块及其领头个股
+    pos = [(n, l) for n, l in ordered if total(l) > 0]
+    if pos:
+        n1, l1 = pos[0]
+        lead = l1[0]
+        seg = (f"{n1} <b class=\"r\">{fmt_flow(total(l1))}</b>：{lead['简称']} {chg(lead)}"
+               f" 获主力 <b class=\"r\">{flow(lead)}</b>")
+        if len(pos) > 1:
+            n2, l2 = pos[1]
+            lead2 = l2[0]
+            seg += f"；{n2} <b class=\"r\">{fmt_flow(total(l2))}</b>：{lead2['简称']} {flow(lead2)}"
+        tips.append({"color": "#e0392e", "title": "净流入最集中", "html": seg + "。"})
+    # 2) 净流出最重：流出最重板块及其压力最大的两只个股
+    neg = [(n, l) for n, l in reversed(ordered) if total(l) < 0]
+    if neg:
+        n1, l1 = neg[0]
+        heavy = l1[-1]
+        seg = (f"{n1} <b class=\"g\">{fmt_flow(total(l1))}</b>：{heavy['简称']} {chg(heavy)}"
+               f" 遭主力 <b class=\"g\">{flow(heavy)}</b>")
+        if len(l1) > 1:
+            second = l1[-2]
+            seg += f"；{second['简称']} {chg(second)} 且流出 {flow(second)}"
+        tips.append({"color": "#0a9c5b", "title": "净流出最重", "html": seg + "。"})
+    # 3) 上榜个股最多：数量、板块整体资金、上涨但流出的家数提示
+    if ordered:
+        n, l = max(ordered, key=lambda kv: len(kv[1]))
+        t = total(l)
+        up_out = sum(1 for x in l if (x["涨跌幅"] or 0) > 0 and (x["净流入"] or 0) < 0)
+        cls = "g" if t < 0 else "r"
+        tail = "警惕高位派发" if t < 0 else "整体获资金净增持"
+        seg = f"{n} <b>{len(l)}</b> 只上榜，板块整体 <b class=\"{cls}\">{fmt_flow(t)}</b>"
+        if up_out:
+            seg += f"，其中 {up_out} 只上涨但主力净流出"
+        tips.append({"color": "#e8c37e", "title": "上榜个股最多", "html": seg + f"，{tail}。"})
+    # 4) 领涨 / 领跌焦点
+    ranked = [s for s in stocks.values() if s["涨跌幅"] is not None]
+    if ranked:
+        top = max(ranked, key=lambda x: x["涨跌幅"])
+        low = min(ranked, key=lambda x: x["涨跌幅"])
+        times = f"（{top['上榜次数']}次上榜）" if top.get("上榜次数", 0) > 1 else ""
+        tips.append({
+            "color": "#13294e", "title": "领涨 / 领跌",
+            "html": (f"{top['简称']} 大涨 {top['涨跌幅']:+.2f}%{times}，主力 {flow(top)}；"
+                     f"{low['简称']} 领跌 {low['涨跌幅']:+.2f}%，主力 {flow(low)}。"),
+        })
+    return tips
+
+
+def build_page_data(day, stocks):
+    """构造注入模板的页面数据（JSON 结构与 lhb_template.html 约定一致，资金单位：万元）"""
+    d = date(int(day[:4]), int(day[4:6]), int(day[6:8]))
+    ordered = aggregate(stocks)
+    inflow = [s for s in stocks.values() if (s["净流入"] or 0) > 0]
+    outflow = [s for s in stocks.values() if (s["净流入"] or 0) < 0]
+    tot_in = sum(s["净流入"] for s in inflow)
+    tot_out = sum(s["净流入"] for s in outflow)
+    net = tot_in + tot_out
+
+    multi = [s for s in stocks.values() if s.get("上榜次数", 0) > 1]
+    note = "、".join(f"{s['简称']} {s['上榜次数']}度上榜" for s in multi) or "收盘后口径"
+
+    def sub_of(s):
+        parts = s["行业"].split("-")[1:]
+        return "-".join(parts) if parts else s["行业"]
+
+    sectors = []
+    for name, lst in ordered:
+        rows = [
+            [s["简称"], s["代码"], sub_of(s),
+             round(s["涨跌幅"] or 0.0, 2), round((s["净流入"] or 0) / 1e4),
+             s.get("上榜次数", 1)]
+            for s in lst
+        ]
+        sectors.append([name, round(_sector_total(lst) / 1e4), rows])
+
+    return {
+        "meta": {
+            "day": day,
+            "dateHyphen": f"{day[:4]}-{day[4:6]}-{day[6:8]}",
+            "dateTag": f"{day[:4]}-{day[4:6]}-{day[6:8]} · 星期{WEEKDAYS[d.weekday()]} · 收盘后",
+            "nStocks": len(stocks),
+            "nSectors": len(ordered),
+        },
+        "stats": [
+            {"bar": "v", "k": "上榜个股", "v": len(stocks), "unit": "只", "s": note, "cls": "c-mid"},
+            {"bar": "in", "k": "主力净流入个股", "v": len(inflow), "unit": "只",
+             "s": f"合计 {fmt_flow(tot_in)}", "cls": "c-up"},
+            {"bar": "out", "k": "主力净流出个股", "v": len(outflow), "unit": "只",
+             "s": f"合计 {fmt_flow(tot_out)}", "cls": "c-down"},
+            {"bar": "net", "k": "主力资金整体", "v": round(net / 1e8, 2), "unit": "亿元",
+             "s": "净流出" if net < 0 else "净流入", "cls": "c-down" if net < 0 else "c-up"},
+        ],
+        "sectors": sectors,
+        "tips": build_tips(ordered, stocks),
+    }
+
+
+def write_page(day, stocks):
+    """依据模板生成数据页 HTML（内嵌 JSON），返回文件路径"""
+    base = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(base, "lhb_template.html"), encoding="utf-8") as f:
+        tpl = f.read()
+    html = tpl.replace("__LHB_DATA__", json.dumps(build_page_data(day, stocks), ensure_ascii=False))
+    out = os.path.join(base, f"lhb_page_{day}.html")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(html)
+    return out
+
+
+def render_images(day, page_html):
+    """调用 puppeteer 把数据页渲染为两张长图，返回 (图1, 图2) 路径"""
+    base = os.path.dirname(os.path.abspath(__file__))
+    out1 = os.path.join(base, f"lhb_sector_flow_{day}.png")
+    out2 = os.path.join(base, f"lhb_stock_detail_{day}.png")
+    env = os.environ.copy()
+    exe = _find_chrome()
+    if exe:
+        env.setdefault("PUPPETEER_EXECUTABLE_PATH", exe)
+    r = subprocess.run(
+        ["node", os.path.join(base, "render_lhb_panorama.js"), page_html, out1, out2],
+        capture_output=True, text=True, env=env, timeout=300,
+    )
+    if r.stdout.strip():
+        print(r.stdout.strip())
+    if r.returncode != 0:
+        raise RuntimeError((r.stderr or r.stdout).strip()[:500])
+    return out1, out2
+
+
 def main():
     day = sys.argv[1] if len(sys.argv) > 1 else date.today().strftime("%Y%m%d")
     stocks = fetch_lhb_list(day)
@@ -309,6 +480,14 @@ def main():
         f.write(report + "\n")
     print(report)
     print(f"\n已保存至 {out_file}")
+
+    # 步骤6：生成数据页并渲染两张长图（板块资金分布 + 分板块个股明细）
+    try:
+        page_html = write_page(day, stocks)
+        img1, img2 = render_images(day, page_html)
+        print(f"长图已生成：\n  {img1}\n  {img2}")
+    except Exception as e:
+        print(f"长图渲染失败：{e}（Markdown 报告不受影响）")
     return 0
 
 
