@@ -9,7 +9,8 @@
     build_summary_page(data, out_path='index.html',
                        lhb_sector_img='lhb_sector_flow.png',
                        lhb_detail_img='lhb_stock_detail.png',
-                       limit_img='limit_panorama.png')
+                       limit_img='limit_panorama.png',
+                       embed_images=True)   # 内嵌 base64，单文件自包含（推荐手机分享用）
 
 data 结构（与 analyze_lhb.py / run_pipeline 产出一致）：
     {
@@ -27,6 +28,7 @@ data 结构（与 analyze_lhb.py / run_pipeline 产出一致）：
     }
 """
 import os
+import base64
 
 
 def fmt_flow(v):
@@ -36,10 +38,25 @@ def fmt_flow(v):
     return f"{sign}{a/1e8:.2f}亿" if a >= 1e8 else f"{sign}{a/1e4:.0f}万"
 
 
+def _img_src(img_path, base_dir, embed):
+    """返回 img src 值：内嵌模式返回 base64 data URI，否则返回相对路径"""
+    if not embed:
+        return os.path.basename(img_path)
+    full = img_path if os.path.isabs(img_path) else os.path.join(base_dir, img_path)
+    if not os.path.isfile(full):
+        # 找不到文件时退回相对路径，保留占位
+        return os.path.basename(img_path)
+    with open(full, 'rb') as f:
+        b64 = base64.b64encode(f.read()).decode('ascii')
+    ext = os.path.splitext(full)[1].lower().lstrip('.') or 'png'
+    return f"data:image/{ext};base64,{b64}"
+
+
 def build_summary_page(data, out_path,
                        lhb_sector_img='lhb_sector_flow.png',
                        lhb_detail_img='lhb_stock_detail.png',
-                       limit_img='limit_panorama.png'):
+                       limit_img='limit_panorama.png',
+                       embed_images=False):
     """
     生成复盘总览 HTML 页面。
 
@@ -49,9 +66,15 @@ def build_summary_page(data, out_path,
         lhb_sector_img: 龙虎榜板块资金分布长图文件名
         lhb_detail_img: 龙虎榜分板块个股明细长图文件名
         limit_img: 涨跌停板块全景长图文件名
+        embed_images: 是否将图片以 base64 内嵌进 HTML（单文件自包含，适合手机分享）
     """
     D = data
     day_cn = D.get("date_cn", D.get("day", ""))
+    base_dir = os.path.dirname(os.path.abspath(out_path))
+
+    img1 = _img_src(lhb_sector_img, base_dir, embed_images)
+    img2 = _img_src(lhb_detail_img, base_dir, embed_images)
+    img3 = _img_src(limit_img, base_dir, embed_images)
 
     # ---- 聚合：龙虎榜按一级行业 ----
     sectors = {}
@@ -242,8 +265,8 @@ def build_summary_page(data, out_path,
         <p>{lhb_ins[3]}</p></div>
     </div>
 
-    <div class="imgbox"><img src="{lhb_sector_img}" alt="龙虎榜板块资金分布长图"><div class="cap">图1 ｜ 龙虎榜 · 板块资金分布（板块汇总 + 双向条形图 + 盘面要点）</div></div>
-    <div class="imgbox"><img src="{lhb_detail_img}" alt="龙虎榜分板块个股明细长图"><div class="cap">图2 ｜ 龙虎榜 · 分板块个股明细（组内按主力净流入排序）</div></div>
+    <div class="imgbox"><img src="{img1}" alt="龙虎榜板块资金分布长图"><div class="cap">图1 ｜ 龙虎榜 · 板块资金分布（板块汇总 + 双向条形图 + 盘面要点）</div></div>
+    <div class="imgbox"><img src="{img2}" alt="龙虎榜分板块个股明细长图"><div class="cap">图2 ｜ 龙虎榜 · 分板块个股明细（组内按主力净流入排序）</div></div>
   </div>
 
   <div class="sec">
@@ -276,7 +299,7 @@ def build_summary_page(data, out_path,
       {hf_rows}
     </table></div>
 
-    <div class="imgbox"><img src="{limit_img}" alt="涨跌停板块全景长图"><div class="cap">图3 ｜ 涨跌停 · 板块全景（行业分布 / 题材主线 / 连板梯队 / 重挫阵营 / 核心结论）</div></div>
+    <div class="imgbox"><img src="{img3}" alt="涨跌停板块全景长图"><div class="cap">图3 ｜ 涨跌停 · 板块全景（行业分布 / 题材主线 / 连板梯队 / 重挫阵营 / 核心结论）</div></div>
   </div>
 
   <div class="foot">
