@@ -116,40 +116,42 @@ def build_summary_page(data, out_path,
 <title>{day_cn} A股复盘 · 龙虎榜板块资金 & 涨跌停全景</title>
 <style>
   * {{ margin:0; padding:0; box-sizing:border-box; }}
-  body {{ background:#eef1f5; font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; color:#1c2430; font-variant-numeric:tabular-nums; }}
+  html {{ -webkit-text-size-adjust:100%; }}
+  body {{ background:#eef1f5; font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; color:#1c2430; font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }}
   .page {{ max-width:960px; margin:0 auto; padding:0 0 60px; }}
   .hero {{ background:linear-gradient(135deg,#ffffff 0%,#f6f8fb 55%,#edf1f8 100%); padding:44px 48px 36px; border-bottom:1px solid #e6e9ef; }}
-  .tag {{ font-size:13px; letter-spacing:2px; color:#b8862f; border:1px solid rgba(217,178,95,.55); background:rgba(217,178,95,.07); padding:4px 12px; border-radius:3px; margin-right:8px; }}
+  .tag {{ font-size:13px; letter-spacing:2px; color:#b8862f; border:1px solid rgba(217,178,95,.55); background:rgba(217,178,95,.07); padding:4px 12px; border-radius:3px; margin-right:8px; display:inline-block; margin-bottom:6px; }}
   .tag.dark {{ color:#68758a; border-color:rgba(104,117,138,.32); background:rgba(104,117,138,.05); }}
-  h1 {{ font-size:38px; font-weight:900; letter-spacing:2px; margin:18px 0 10px; color:#13294e; }}
+  h1 {{ font-size:38px; font-weight:900; letter-spacing:2px; margin:18px 0 10px; color:#13294e; line-height:1.25; }}
   h1 .accent {{ color:#c9974a; }}
-  .sub {{ font-size:15px; color:#5a6778; letter-spacing:1px; }}
+  .sub {{ font-size:15px; color:#5a6778; letter-spacing:1px; line-height:1.6; }}
   .hero-line {{ width:64px; height:5px; background:linear-gradient(90deg,#e8c37e,#e0392e); border-radius:3px; margin-top:20px; }}
   .stats {{ display:grid; grid-template-columns:repeat(6,1fr); gap:12px; padding:22px 24px 6px; }}
-  .stat {{ background:#fff; border-radius:10px; padding:16px 12px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); }}
+  .stat {{ background:#fff; border-radius:10px; padding:16px 12px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); text-align:center; }}
   .stat .k {{ font-size:12px; color:#8a93a3; margin-bottom:8px; }}
   .stat .v {{ font-size:24px; font-weight:900; }}
   .stat .s {{ font-size:11px; color:#9aa3b2; margin-top:6px; }}
   .c-up {{ color:#d92c20; }} .c-down {{ color:#06894f; }} .c-mid {{ color:#13294e; }}
   .sec {{ padding:26px 24px 8px; }}
-  .sec-head {{ display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }}
+  .sec-head {{ display:flex; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap; }}
   .sec-no {{ font-size:13px; font-weight:900; color:#d9b25f; letter-spacing:1px; }}
   .sec-title {{ font-size:21px; font-weight:900; color:#13294e; }}
   .sec-note {{ font-size:12px; color:#9aa3b2; margin-left:auto; }}
   .card {{ background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); padding:8px 0 4px; overflow:hidden; }}
-  table {{ width:100%; border-collapse:collapse; font-size:13px; }}
-  th {{ text-align:left; font-size:12px; color:#8a93a3; font-weight:600; padding:9px 16px; border-bottom:1px solid #edf0f5; }}
+  .card + .card {{ margin-top:14px; }}
+  table {{ width:100%; border-collapse:collapse; font-size:13px; table-layout:auto; }}
+  th {{ text-align:left; font-size:12px; color:#8a93a3; font-weight:600; padding:9px 16px; border-bottom:1px solid #edf0f5; white-space:nowrap; }}
   td {{ padding:8px 16px; border-bottom:1px solid #f4f6f9; color:#2a3648; }}
   tr:last-child td {{ border-bottom:none; }}
   tr:nth-child(even) td {{ background:#fafbfd; }}
-  td.num, th.num {{ text-align:right; font-weight:700; }}
-  td.names {{ color:#68758a; }}
+  td.num, th.num {{ text-align:right; font-weight:700; white-space:nowrap; }}
+  td.names {{ color:#68758a; word-break:break-all; }}
   .up {{ color:#d92c20; }} .down {{ color:#06894f; }}
-  .badge {{ display:inline-block; font-size:12px; color:#8a6417; background:#fdf3dd; border-radius:8px; padding:2px 8px; font-weight:700; }}
+  .badge {{ display:inline-block; font-size:12px; color:#8a6417; background:#fdf3dd; border-radius:8px; padding:2px 8px; font-weight:700; white-space:nowrap; }}
   .badge.dn {{ color:#06894f; background:#e6f5ec; }}
   .imgbox {{ background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); padding:14px; margin-top:14px; }}
-  .imgbox img {{ width:100%; display:block; border-radius:6px; }}
-  .imgbox .cap {{ font-size:12px; color:#9aa3b2; text-align:center; padding:8px 0 2px; }}
+  .imgbox img {{ width:100%; max-width:100%; height:auto; display:block; border-radius:6px; }}
+  .imgbox .cap {{ font-size:12px; color:#9aa3b2; text-align:center; padding:8px 0 2px; line-height:1.5; }}
   .tips {{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }}
   .tip {{ background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); padding:16px 18px; }}
   .tip .t {{ font-size:14px; font-weight:900; margin-bottom:7px; color:#13294e; display:flex; align-items:center; gap:8px; }}
@@ -160,6 +162,47 @@ def build_summary_page(data, out_path,
   .foot .ft {{ font-size:13px; font-weight:700; color:#b8862f; margin-bottom:6px; }}
   .foot p {{ font-size:11.5px; line-height:1.8; color:#68758a; }}
   .foot .disc {{ margin-top:8px; padding-top:8px; border-top:1px solid #e6e9ef; color:#9aa3b2; }}
+
+  /* ========== 移动端适配（≤640px） ========== */
+  @media (max-width:640px) {{
+    .page {{ padding:0 0 40px; }}
+    .hero {{ padding:28px 20px 24px; }}
+    h1 {{ font-size:26px; letter-spacing:1px; margin:14px 0 8px; }}
+    .sub {{ font-size:13px; letter-spacing:0; }}
+    .tag {{ font-size:11px; letter-spacing:1px; padding:3px 10px; margin-right:6px; }}
+    .stats {{ grid-template-columns:repeat(3,1fr); gap:8px; padding:16px 14px 4px; }}
+    .stat {{ padding:12px 8px; border-radius:8px; }}
+    .stat .k {{ font-size:11px; margin-bottom:6px; }}
+    .stat .v {{ font-size:20px; }}
+    .stat .v small {{ font-size:11px !important; }}
+    .stat .s {{ font-size:10px; margin-top:4px; }}
+    .sec {{ padding:18px 14px 6px; }}
+    .sec-head {{ gap:8px; margin-bottom:10px; }}
+    .sec-no {{ font-size:11px; }}
+    .sec-title {{ font-size:17px; }}
+    .sec-note {{ font-size:10px; margin-left:0; width:100%; order:3; }}
+    .card {{ border-radius:8px; }}
+    table {{ font-size:12px; }}
+    th, td {{ padding:7px 10px; }}
+    th {{ font-size:11px; }}
+    .tips {{ grid-template-columns:1fr; gap:10px; margin-top:10px; }}
+    .tip {{ padding:12px 14px; border-radius:8px; }}
+    .tip .t {{ font-size:13px; margin-bottom:5px; }}
+    .tip p {{ font-size:12px; line-height:1.7; }}
+    .imgbox {{ padding:10px; margin-top:10px; border-radius:8px; }}
+    .imgbox .cap {{ font-size:11px; padding:6px 0 2px; }}
+    .foot {{ margin:18px 14px 0; padding:14px 16px; border-radius:8px; }}
+    .foot .ft {{ font-size:12px; }}
+    .foot p {{ font-size:11px; line-height:1.7; }}
+  }}
+
+  /* ========== 超小屏（≤380px）字号再缩小 ========== */
+  @media (max-width:380px) {{
+    h1 {{ font-size:22px; }}
+    .stat .v {{ font-size:18px; }}
+    table {{ font-size:11px; }}
+    th, td {{ padding:6px 8px; }}
+  }}
 </style>
 </head>
 <body>
