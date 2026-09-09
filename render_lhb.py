@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-"""小红书版 龙虎榜·板块概念 静态长图（2026.09.08）"""
+"""
+龙虎榜 · 板块概念 静态长图
+按板块展示龙虎榜主力净流入 / 净流出排名 + 个股明细 + 关键信号。
+
+改进点（v2）：
+  - 统一基线对齐，数字与文字不再高低错位
+  - 日期徽章右对齐定位修正
+  - 注脚文案规范化
+"""
 import os
 from PIL import Image, ImageDraw, ImageFont
 
 SS = 2
 W = 1080
-CW = W*SS
+CW = W * SS
 
 FD = os.path.dirname(os.path.abspath(__file__))
 F_BOLD = os.path.join(FD, 'fonts', 'NotoSansSC-Bold.otf')
@@ -23,11 +31,13 @@ DOWN = (43, 138, 90)
 DNBG = (227, 244, 235)
 AMB  = (217, 119, 6)
 
+
 def F(sz, bold=True):
-    return ImageFont.truetype(F_BOLD if bold else F_REG, int(sz*SS))
+    return ImageFont.truetype(F_BOLD if bold else F_REG, int(sz * SS))
+
 
 MX = 40                        # 左右留白
-CWX = W - 2*MX                 # 内容宽 = 1000
+CWX = W - 2 * MX               # 内容宽 = 1000
 
 # ---------------- 数据 ----------------
 BUY = [
@@ -91,14 +101,17 @@ INSIGHTS = [
     "④ 净卖双雄：中石科技-3.33亿、博云新材-3.01亿为两大砸盘主力",
 ]
 
+
 def card_h(lines):
-    return 84 + len(lines)*32 + 14
+    return 84 + len(lines) * 32 + 14
+
 
 def section_h(items):
     h = 0
     for name, total, color, lines in items:
         h += card_h(lines) + 18
     return h
+
 
 # 预计算总高度
 HEADER = 270
@@ -107,48 +120,66 @@ SELL_TITLE = 64
 INSIGHT_TITLE = 64
 BUY_H = section_h(BUY)
 SELL_H = section_h(SELL)
-INS_H = 40 + len(INSIGHTS)*42 + 60    # 洞察卡
+INS_H = 40 + len(INSIGHTS) * 42 + 60    # 洞察卡
 FOOT = 80
 BOTTOM = 48
 
 H = HEADER + BUY_TITLE + BUY_H + SELL_TITLE + SELL_H + INSIGHT_TITLE + INS_H + FOOT + BOTTOM
 H = int(H)
-CH = H*SS
+CH = H * SS
 print('canvas', W, H)
 
-img = Image.new('RGBA', (CW, CH), BG+(255,))
+img = Image.new('RGBA', (CW, CH), BG + (255,))
 d = ImageDraw.Draw(img)
 
+
 def draw_section_title(y, color, title):
-    d.ellipse([MX*SS, (y+12)*SS, (MX+20)*SS, (y+32)*SS], fill=color+(255,))
-    d.text(((MX+36)*SS, (y+4)*SS), title, font=F(34), fill=INK+(255,))
-    d.text(((MX+CWX-80)*SS, (y+12)*SS), '单位：亿元', font=F(20, False), fill=GRAY+(255,))
+    d.ellipse([MX * SS, (y + 12) * SS, (MX + 20) * SS, (y + 32) * SS],
+              fill=color + (255,))
+    d.text(((MX + 36) * SS, (y + 22) * SS), title,
+           font=F(34), fill=INK + (255,), anchor='lm')
+    d.text(((MX + CWX - 30) * SS, (y + 22) * SS), '单位：亿元',
+           font=F(20, False), fill=GRAY + (255,), anchor='rm')
     return y + 64
+
 
 def draw_card(y, name, total, color, lines):
     ch = card_h(lines)
-    d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+ch)*SS],
-                        radius=16*SS, fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
-    d.rectangle([MX*SS, (y+18)*SS, (MX+6)*SS, (y+ch-18)*SS], fill=color+(255,))
-    # 概念名
-    d.text(((MX+30)*SS, (y+26)*SS), name, font=F(30), fill=INK+(255,))
-    # 总净额（右对齐）
-    d.text(((MX+CWX-30)*SS, (y+16)*SS), total, font=F(36), fill=color+(255,), anchor='rm')
+    d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + ch) * SS],
+                        radius=16 * SS, fill=CARD + (255,),
+                        outline=LINE + (255,), width=2 * SS)
+    d.rectangle([MX * SS, (y + 18) * SS, (MX + 6) * SS, (y + ch - 18) * SS],
+                fill=color + (255,))
+    # 概念名（基线对齐）
+    d.text(((MX + 30) * SS, (y + 50) * SS), name,
+           font=F(30), fill=INK + (255,), anchor='ls')
+    # 总净额（右对齐，基线对齐）
+    d.text(((MX + CWX - 30) * SS, (y + 50) * SS), total,
+           font=F(36), fill=color + (255,), anchor='rs')
     # 个股明细
     yy = y + 84
     for ln in lines:
-        d.text(((MX+30)*SS, yy*SS), ln, font=F(23, False), fill=GRAY+(255,))
+        d.text(((MX + 30) * SS, yy * SS), ln,
+               font=F(23, False), fill=GRAY + (255,), anchor='ls')
         yy += 32
     return y + ch + 18
 
+
 # ---------- 标题区 ----------
-d.rounded_rectangle([MX*SS, 48*SS, (MX+332)*SS, 100*SS], radius=26*SS, fill=XRED+(255,))
-d.text(((MX+26)*SS, 61*SS), '龙虎榜 · 板块分析', font=F(27), fill=(255,255,255,255))
-d.rounded_rectangle([(812)*SS, 48*SS, 1040*SS, 100*SS], radius=26*SS, outline=GRAY+(200,), width=2*SS)
-d.text((926*SS, 61*SS), '2026.09.08 收盘', font=F(25, False), fill=GRAY+(255,))
-d.text((MX*SS, 118*SS), '化工称霸 · 军工弃子', font=F(56), fill=INK+(255,))
-d.rectangle([(MX+2)*SS, 196*SS, (MX+178)*SS, 202*SS], fill=XRED+(255,))
-d.text((MX*SS, 208*SS), '55只上榜 · 基础化工净买5.6亿居首 · 博云新材-3亿遭弃', font=F(27, False), fill=GRAY+(255,))
+d.rounded_rectangle([MX * SS, 48 * SS, (MX + 332) * SS, 100 * SS],
+                    radius=26 * SS, fill=XRED + (255,))
+d.text(((MX + 26) * SS, 74 * SS), '龙虎榜 · 板块分析',
+       font=F(27), fill=(255, 255, 255, 255), anchor='lm')
+d.rounded_rectangle([(W - 228) * SS, 48 * SS, (W - 40) * SS, 100 * SS],
+                    radius=26 * SS, outline=GRAY + (200,), width=2 * SS)
+d.text(((W - 134) * SS, 74 * SS), '2026.09.08 收盘',
+       font=F(25, False), fill=GRAY + (255,), anchor='mm')
+d.text((MX * SS, 138 * SS), '化工称霸 · 军工弃子',
+       font=F(56), fill=INK + (255,), anchor='ls')
+d.rectangle([(MX + 2) * SS, 196 * SS, (MX + 178) * SS, 202 * SS], fill=XRED + (255,))
+d.text((MX * SS, 222 * SS),
+       '55只上榜 · 基础化工净买5.6亿居首 · 博云新材-3亿遭弃',
+       font=F(27, False), fill=GRAY + (255,), anchor='ls')
 
 # ---------- 净买入榜 ----------
 y = HEADER
@@ -163,18 +194,22 @@ for name, total, color, lines in SELL:
 
 # ---------- 洞察卡 ----------
 y = draw_section_title(y, XRED, '今日关键信号')
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+INS_H)*SS],
-                    radius=20*SS, fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
-d.rectangle([MX*SS, (y+20)*SS, (MX+6)*SS, (y+INS_H-20)*SS], fill=XRED+(255,))
-yy = y + 32
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + INS_H) * SS],
+                    radius=20 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
+d.rectangle([MX * SS, (y + 20) * SS, (MX + 6) * SS, (y + INS_H - 20) * SS],
+            fill=XRED + (255,))
+yy = y + 40
 for s in INSIGHTS:
-    d.text(((MX+34)*SS, yy*SS), s, font=F(26, False), fill=(51,51,51,255))
+    d.text(((MX + 34) * SS, yy * SS), s,
+           font=F(26, False), fill=(51, 51, 51, 255), anchor='ls')
     yy += 42
 
 # ---------- 底部免责 ----------
 fy = y + INS_H + 28
-d.text((MX*SS, fy*SS), '数据：同花顺 iFinD 龙虎榜（当日上榜净额，单日+三日榜口径） ｜ 仅供学习参考，不构成投资建议',
-       font=F(20, False), fill=GRAY+(230,))
+d.text((MX * SS, fy * SS),
+       '数据：同花顺 iFinD 龙虎榜（当日上榜净额，单日+三日榜口径） ｜ 仅供学习参考，不构成投资建议',
+       font=F(20, False), fill=GRAY + (230,))
 
 out = img.resize((W, H), Image.LANCZOS).convert('RGB')
 out_path = os.path.join(FD, 'lhb_concept_0908.png')

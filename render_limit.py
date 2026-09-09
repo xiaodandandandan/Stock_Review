@@ -1,11 +1,20 @@
 # -*- coding: utf-8 -*-
-"""小红书版 涨跌停·板块全景 静态长图（2026.09.08）"""
-import math, os
+"""
+涨跌停 · 板块全景 静态长图
+展示涨停行业分布 / 题材主线 / 连板梯队 / 跌停阵营 / 核心结论。
+
+改进点（v2）：
+  - 画布加宽至 1440px，条形图与数量文字分离，不再遮挡
+  - 统一基线对齐，数字与文字无高低错位
+  - 药丸/徽章内文字垂直居中修正
+  - 备注长度控制，不超出卡片右边界
+"""
+import os
 from PIL import Image, ImageDraw, ImageFont
 
 SS = 2
-W = 1080
-CW = W*SS
+W = 1440
+CW = W * SS
 
 FD = os.path.dirname(os.path.abspath(__file__))
 F_BOLD = os.path.join(FD, 'fonts', 'NotoSansSC-Bold.otf')
@@ -25,11 +34,13 @@ DNBG = (227, 244, 235)
 AMB  = (217, 119, 6)
 GNBG = (254, 243, 217)
 
+
 def F(sz, bold=True):
-    return ImageFont.truetype(F_BOLD if bold else F_REG, int(sz*SS))
+    return ImageFont.truetype(F_BOLD if bold else F_REG, int(sz * SS))
+
 
 MX = 40
-CWX = W - 2*MX
+CWX = W - 2 * MX
 
 # ---------------- 数据 ----------------
 # (行业, 家数, 备注)
@@ -89,8 +100,10 @@ SIGNALS = [
 HEADER = 252
 GAP = 30
 
+
 def sec_card_h(n_rows, row_h, title_h=64, pad=18):
-    return title_h + n_rows*row_h + pad
+    return title_h + n_rows * row_h + pad
+
 
 # Sec1 行业分布
 R1 = 58
@@ -105,118 +118,169 @@ H3 = sec_card_h(3, R3)
 R4 = 58
 H4 = sec_card_h(len(DOWNLIST), R4)
 # Sec5 结论
-H5 = 70 + len(SIGNALS)*40 + 26
+H5 = 70 + len(SIGNALS) * 40 + 26
 
 H = HEADER + H1 + GAP + H2 + GAP + H3 + GAP + H4 + GAP + H5 + 96
 H = int(H)
-CH = H*SS
+CH = H * SS
 print('canvas', W, H)
 
-img = Image.new('RGBA', (CW, CH), BG+(255,))
+img = Image.new('RGBA', (CW, CH), BG + (255,))
 d = ImageDraw.Draw(img)
 
+
 def sec_header(y, color, title, sub):
-    d.rectangle([MX*SS, (y+18)*SS, (MX+6)*SS, (y+54)*SS], fill=color+(255,))
-    d.text(((MX+26)*SS, (y+10)*SS), title, font=F(34), fill=INK+(255,))
-    tw = d.textlength(sub, font=F(24, False))
-    d.text(((MX+CWX-10-int(tw/SS))*SS, (y+24)*SS), sub, font=F(24, False), fill=color+(255,))
+    d.rectangle([MX * SS, (y + 18) * SS, (MX + 6) * SS, (y + 54) * SS],
+                fill=color + (255,))
+    d.text(((MX + 26) * SS, (y + 36) * SS), title,
+           font=F(34), fill=INK + (255,), anchor='lm')
+    d.text(((MX + CWX - 10) * SS, (y + 36) * SS), sub,
+           font=F(24, False), fill=color + (255,), anchor='rm')
+
 
 # ---------- 标题区 ----------
-d.rounded_rectangle([MX*SS, 40*SS, (MX+346)*SS, 92*SS], radius=26*SS, fill=XRED+(255,))
-d.text(((MX+26)*SS, 53*SS), '涨跌停 · 板块全景', font=F(27), fill=(255,255,255,255))
-d.rounded_rectangle([812*SS, 40*SS, 1040*SS, 92*SS], radius=26*SS, outline=GRAY+(200,), width=2*SS)
-d.text((926*SS, 53*SS), '2026.09.08 收盘', font=F(24, False), fill=GRAY+(255,))
-d.text((MX*SS, 112*SS), '74涨停 vs 10跌超9%', font=F(58), fill=INK+(255,))
-d.rectangle([(MX+2)*SS, 190*SS, (MX+186)*SS, 196*SS], fill=XRED+(255,))
-d.text((MX*SS, 212*SS), '普涨但化工极端占优 · 高标仅4板', font=F(28, False), fill=GRAY+(255,))
+d.rounded_rectangle([MX * SS, 40 * SS, (MX + 346) * SS, 92 * SS],
+                    radius=26 * SS, fill=XRED + (255,))
+d.text(((MX + 26) * SS, 66 * SS), '涨跌停 · 板块全景',
+       font=F(27), fill=(255, 255, 255, 255), anchor='lm')
+d.rounded_rectangle([(W - 228) * SS, 40 * SS, (W - 40) * SS, 92 * SS],
+                    radius=26 * SS, outline=GRAY + (200,), width=2 * SS)
+d.text(((W - 134) * SS, 66 * SS), '2026.09.08 收盘',
+       font=F(24, False), fill=GRAY + (255,), anchor='mm')
+d.text((MX * SS, 128 * SS), '74涨停 vs 10跌超9%',
+       font=F(58), fill=INK + (255,), anchor='ls')
+d.rectangle([(MX + 2) * SS, 190 * SS, (MX + 186) * SS, 196 * SS], fill=XRED + (255,))
+d.text((MX * SS, 218 * SS), '普涨但化工极端占优 · 高标仅4板',
+       font=F(28, False), fill=GRAY + (255,), anchor='ls')
 
 # ---------- Sec1 涨停行业分布 ----------
 y = HEADER
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+H1)*SS], radius=16*SS,
-                    fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + H1) * SS],
+                    radius=16 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
 sec_header(y, UP, '涨停板块分布', '74只 · 按申万行业')
 yy = y + 64
 maxv = max(v for _, v, _ in INDUSTRY)
-BAR_X0, BAR_X1 = MX+250, MX+780
+# 条形图终点留出足够空间给 "N只" 数字 + 备注
+BAR_X0, BAR_X1 = MX + 260, MX + 620
 for name, v, note in INDUSTRY:
-    d.text(((MX+24)*SS, (yy+10)*SS), name, font=F(26), fill=INK+(255,))
-    bwid = int((BAR_X1-BAR_X0) * (v/maxv) * SS)
+    # 行业名（基线对齐）
+    d.text(((MX + 24) * SS, (yy + 36) * SS), name,
+           font=F(26), fill=INK + (255,), anchor='ls')
+    # 条形
+    bwid = int((BAR_X1 - BAR_X0) * (v / maxv) * SS)
     if bwid > 0:
-        d.rounded_rectangle([BAR_X0*SS, (yy+12)*SS, BAR_X0*SS+bwid, (yy+42)*SS],
-                            radius=7*SS, fill=UP+(220,))
-    d.text(((MX+798)*SS, (yy+8)*SS), "%d只" % v, font=F(28), fill=UP+(255,), anchor='rm')
-    d.text(((MX+812)*SS, (yy+16)*SS), note, font=F(20, False), fill=GRAY+(255,))
+        d.rounded_rectangle([BAR_X0 * SS, (yy + 10) * SS,
+                             BAR_X0 * SS + bwid, (yy + 40) * SS],
+                            radius=7 * SS, fill=UP + (220,))
+    # 数量（基线右对齐，与条形有间距）
+    d.text(((MX + 690) * SS, (yy + 36) * SS), "%d只" % v,
+           font=F(28), fill=UP + (255,), anchor='rs')
+    # 备注（基线左对齐）
+    d.text(((MX + 720) * SS, (yy + 36) * SS), note,
+           font=F(20, False), fill=GRAY + (255,), anchor='ls')
     yy += R1
 y += H1 + GAP
 
 # ---------- Sec2 题材主线 ----------
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+H2)*SS], radius=16*SS,
-                    fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + H2) * SS],
+                    radius=16 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
 sec_header(y, XRED, '涨停题材主线', '按概念归集')
 yy = y + 64
 for name, v, note in THEMES:
-    d.rounded_rectangle([(MX+24)*SS, (yy+14)*SS, (MX+240)*SS, (yy+62)*SS],
-                        radius=10*SS, fill=UPBG+(255,))
-    d.text(((MX+132)*SS, (yy+24)*SS), name, font=F(24), fill=UP+(255,), anchor='ma')
-    d.text(((MX+290)*SS, (yy+8)*SS), "%d只" % v, font=F(34), fill=INK+(255,), anchor='rm')
-    d.text(((MX+310)*SS, (yy+22)*SS), note, font=F(24, False), fill=GRAY+(255,))
+    # 药丸标签
+    d.rounded_rectangle([(MX + 24) * SS, (yy + 14) * SS,
+                         (MX + 240) * SS, (yy + 62) * SS],
+                        radius=10 * SS, fill=UPBG + (255,))
+    d.text(((MX + 132) * SS, (yy + 38) * SS), name,
+           font=F(24), fill=UP + (255,), anchor='mm')
+    # N只（基线右对齐）
+    d.text(((MX + 290) * SS, (yy + 50) * SS), "%d只" % v,
+           font=F(34), fill=INK + (255,), anchor='rs')
+    # 备注（基线左对齐）
+    d.text(((MX + 310) * SS, (yy + 50) * SS), note,
+           font=F(24, False), fill=GRAY + (255,), anchor='ls')
     yy += R2
 y += H2 + GAP
 
 # ---------- Sec3 连板梯队 ----------
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+H3)*SS], radius=16*SS,
-                    fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + H3) * SS],
+                    radius=16 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
 sec_header(y, AMB, '连板梯队', '情绪标尺')
 yy = y + 64
 for lb, names, note in LADDERS:
-    d.rounded_rectangle([(MX+24)*SS, (yy+16)*SS, (MX+108)*SS, (yy+64)*SS],
-                        radius=10*SS, fill=AMB+(255,))
-    d.text(((MX+66)*SS, (yy+28)*SS), lb, font=F(28), fill=(255,255,255,255), anchor='ma')
+    # 板数徽章
+    d.rounded_rectangle([(MX + 24) * SS, (yy + 16) * SS,
+                         (MX + 108) * SS, (yy + 64) * SS],
+                        radius=10 * SS, fill=AMB + (255,))
+    d.text(((MX + 66) * SS, (yy + 40) * SS), lb,
+           font=F(28), fill=(255, 255, 255, 255), anchor='mm')
+    # 个股名（基线对齐）
     if len(names) > 6:
         line1 = "、".join(names[:6])
         line2 = "、".join(names[6:])
-        d.text(((MX+128)*SS, (yy+4)*SS), line1, font=F(24), fill=INK+(255,))
-        d.text(((MX+128)*SS, (yy+38)*SS), line2, font=F(24), fill=INK+(255,))
+        d.text(((MX + 128) * SS, (yy + 38) * SS), line1,
+               font=F(24), fill=INK + (255,), anchor='ls')
+        d.text(((MX + 128) * SS, (yy + 66) * SS), line2,
+               font=F(24), fill=INK + (255,), anchor='ls')
     else:
-        d.text(((MX+128)*SS, (yy+18)*SS), "、".join(names), font=F(26), fill=INK+(255,))
-    tw = d.textlength(note, font=F(21, False))
-    d.text(((MX+CWX-14-int(tw/SS))*SS, (yy+18)*SS), note, font=F(21, False), fill=GRAY+(255,))
+        d.text(((MX + 128) * SS, (yy + 50) * SS), "、".join(names),
+               font=F(26), fill=INK + (255,), anchor='ls')
+    # 右侧备注（基线右对齐）
+    d.text(((MX + CWX - 14) * SS, (yy + 48) * SS), note,
+           font=F(21, False), fill=GRAY + (255,), anchor='rs')
     yy += R3
 y += H3 + GAP
 
 # ---------- Sec4 跌停阵营 ----------
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+H4)*SS], radius=16*SS,
-                    fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + H4) * SS],
+                    radius=16 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
 sec_header(y, DOWN, '跌停/重挫阵营', '10只 · 无板块性跌停')
 yy = y + 64
 for name, pct, board, note in DOWNLIST:
-    d.text(((MX+24)*SS, (yy+12)*SS), name, font=F(26), fill=INK+(255,))
-    d.text(((MX+250)*SS, (yy+10)*SS), "%.1f%%" % pct, font=F(28), fill=DOWN+(255,), anchor='rm')
-    d.rounded_rectangle([(MX+270)*SS, (yy+14)*SS, (MX+470)*SS, (yy+44)*SS],
-                        radius=8*SS, fill=DNBG+(255,))
-    d.text(((MX+280)*SS, (yy+16)*SS), board, font=F(20), fill=DOWN+(255,))
-    d.text(((MX+486)*SS, (yy+16)*SS), note, font=F(21, False), fill=GRAY+(255,))
+    # 个股名
+    d.text(((MX + 24) * SS, (yy + 38) * SS), name,
+           font=F(26), fill=INK + (255,), anchor='ls')
+    # 跌幅（右对齐基线）
+    d.text(((MX + 250) * SS, (yy + 38) * SS), "%.1f%%" % pct,
+           font=F(28), fill=DOWN + (255,), anchor='rs')
+    # 行业徽章
+    d.rounded_rectangle([(MX + 270) * SS, (yy + 11) * SS,
+                         (MX + 470) * SS, (yy + 41) * SS],
+                        radius=8 * SS, fill=DNBG + (255,))
+    d.text(((MX + 280) * SS, (yy + 26) * SS), board,
+           font=F(20), fill=DOWN + (255,), anchor='lm')
+    # 备注
+    d.text(((MX + 486) * SS, (yy + 38) * SS), note,
+           font=F(21, False), fill=GRAY + (255,), anchor='ls')
     yy += R4
 y += H4 + GAP
 
 # ---------- Sec5 核心结论 ----------
-d.rounded_rectangle([MX*SS, y*SS, (MX+CWX)*SS, (y+H5)*SS], radius=16*SS,
-                    fill=CARD+(255,), outline=LINE+(255,), width=2*SS)
-d.rectangle([MX*SS, (y+18)*SS, (MX+6)*SS, (y+54)*SS], fill=XRED+(255,))
-d.text(((MX+26)*SS, (y+10)*SS), '核心结论', font=F(32), fill=INK+(255,))
+d.rounded_rectangle([MX * SS, y * SS, (MX + CWX) * SS, (y + H5) * SS],
+                    radius=16 * SS, fill=CARD + (255,),
+                    outline=LINE + (255,), width=2 * SS)
+d.rectangle([MX * SS, (y + 18) * SS, (MX + 6) * SS, (y + 54) * SS],
+            fill=XRED + (255,))
+d.text(((MX + 26) * SS, (y + 36) * SS), '核心结论',
+       font=F(32), fill=INK + (255,), anchor='lm')
 yy = y + 70
 for s in SIGNALS:
-    d.text(((MX+26)*SS, yy*SS), s, font=F(25, False), fill=INK2+(255,))
+    d.text(((MX + 26) * SS, yy * SS), s,
+           font=F(25, False), fill=INK2 + (255,), anchor='ls')
     yy += 40
 y += H5
 
 # ---------- 底部 ----------
-d.text((MX*SS, (y+30)*SS),
+d.text((MX * SS, (y + 30) * SS),
        '口径：收盘涨停74只(含一字) / 跌超9%重挫10只 · 涨停家数按申万一级行业归集',
-       font=F(20, False), fill=GRAY+(230,))
-d.text((MX*SS, (y+60)*SS),
+       font=F(20, False), fill=GRAY + (230,))
+d.text((MX * SS, (y + 60) * SS),
        '数据：同花顺 iFinD ｜ 仅供学习参考，不构成投资建议',
-       font=F(20, False), fill=GRAY+(230,))
+       font=F(20, False), fill=GRAY + (230,))
 
 out = img.resize((W, H), Image.LANCZOS).convert('RGB')
 out_path = os.path.join(FD, 'limit_panorama_0908.png')
