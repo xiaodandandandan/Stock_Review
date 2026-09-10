@@ -1,0 +1,4 @@
+requests==2.34.2
+urllib3==2.7.0
+Pillow==12.3.0
+pytest==8.3.5

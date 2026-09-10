@@ -5,3 +5,7 @@ __pycache__/
 fonts/
 node_modules/
 lhb_page_*.html
+data_*.json
+index_*.html
+lhb_report_*.md
+qa_*.txt

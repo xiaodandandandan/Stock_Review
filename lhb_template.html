@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/400.css">
 <link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/500.css">
 <link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/700.css">
@@ -9,13 +10,14 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#eef1f5; font-family:'Noto Sans SC',sans-serif; color:#1c2430; font-variant-numeric: tabular-nums; }
-  .page { width:900px; margin:0 auto; background:#eef1f5; }
+  .page { width:100%; max-width:900px; margin:0 auto; background:#eef1f5; }
 
   /* ---------- header ---------- */
   .hero { background:linear-gradient(135deg,#ffffff 0%,#f6f8fb 55%,#edf1f8 100%); color:#1c2430; padding:44px 48px 36px; position:relative; overflow:hidden; border-bottom:1px solid #e6e9ef; box-shadow:0 2px 10px rgba(16,32,64,.04); }
   .hero .deco { position:absolute; right:-90px; top:-90px; width:340px; height:340px; border-radius:50%; border:44px solid rgba(19,41,78,.045); }
   .hero .deco2 { position:absolute; right:60px; bottom:-130px; width:240px; height:240px; border-radius:50%; border:30px solid rgba(217,178,95,.12); }
   .hero-top { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .hero-date { font-size:13px; color:#8a93a3; letter-spacing:1px; margin-top:14px; position:relative; z-index:1; }
   .tag { font-size:13px; letter-spacing:2px; color:#b8862f; border:1px solid rgba(217,178,95,.55); background:rgba(217,178,95,.07); padding:4px 12px; border-radius:3px; }
   .tag.dark { color:#68758a; border-color:rgba(104,117,138,.32); background:rgba(104,117,138,.05); }
   h1 { font-size:44px; font-weight:900; letter-spacing:3px; margin:18px 0 10px; position:relative; z-index:1; color:#13294e; }
@@ -55,13 +57,15 @@
   .zone .bar { position:absolute; top:8px; height:13px; border-radius:2px; }
   .zone .bar.pos { left:50%; background:linear-gradient(90deg,#f06a5e,#e0392e); }
   .zone .bar.neg { right:50%; background:linear-gradient(270deg,#3ec58a,#0a9c5b); }
+  .zone .bar.pos, .zone .bar.neg { max-width:calc(50% - 2px); }
   .crow .val { width:86px; flex:none; text-align:right; font-size:13px; font-weight:700; }
   .chart-legend { display:flex; justify-content:center; gap:26px; padding:8px 0 6px; font-size:12px; color:#8a93a3; }
   .lg { display:flex; align-items:center; gap:6px; }
   .lg i { width:18px; height:8px; border-radius:2px; display:inline-block; }
 
   /* ---------- sector cards ---------- */
-  .cards { display:flex; flex-direction:column; gap:14px; }
+  .cards { display:flex; gap:14px; align-items:flex-start; }
+  .cards .col { flex:1; min-width:0; display:flex; flex-direction:column; gap:14px; }
   .card { background:#fff; border-radius:10px; border:1px solid #e6e9ef; box-shadow:0 2px 8px rgba(16,32,64,.05); overflow:hidden; }
   .card-h { display:flex; align-items:center; gap:10px; padding:13px 18px; background:#f7f9fc; border-bottom:1px solid #edf0f5; }
   .card-h.pin { border-left:4px solid #e0392e; }
@@ -69,21 +73,61 @@
   .card-h .sname { font-size:17px; font-weight:900; color:#13294e; letter-spacing:1px; }
   .card-h .scnt { font-size:11px; color:#68758a; background:#eef1f6; border-radius:10px; padding:2px 9px; }
   .card-h .sflow { margin-left:auto; font-size:16px; font-weight:900; }
-  .cols { display:grid; grid-template-columns:158px 1fr 96px 116px; padding:7px 18px; font-size:11px; color:#9aa3b2; border-bottom:1px solid #f0f2f6; }
+  .cols { display:grid; grid-template-columns:88px 1fr 72px 118px; padding:7px 18px; font-size:11px; color:#9aa3b2; border-bottom:1px solid #f0f2f6; }
+  .cols div:nth-child(1) { padding-right:14px; }
   .cols div:nth-child(3),.cols div:nth-child(4) { text-align:right; }
-  .row { display:grid; grid-template-columns:158px 1fr 96px 116px; align-items:center; padding:9px 18px; border-bottom:1px solid #f4f6f9; }
+  .row { display:grid; grid-template-columns:88px 1fr 72px 118px; align-items:center; padding:9px 18px; border-bottom:1px solid #f4f6f9; }
   .row:nth-child(even) { background:#fafbfd; }
   .row:last-child { border-bottom:none; }
-  .row .nm { line-height:1.25; }
+  .row .nm { line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:14px; }
   .row .nm b { font-size:15px; font-weight:700; color:#1c2430; }
-  .row .nm .badge2 { font-size:10px; color:#8a6417; background:#fdf3dd; border-radius:8px; padding:1px 6px; margin-left:6px; font-weight:500; vertical-align:1px; }
-  .row .nm span { display:block; font-size:11px; color:#a5adbb; margin-top:1px; }
-  .row .sub { font-size:12px; color:#68758a; }
-  .row .pct { text-align:right; }
-  .row .pct i { font-style:normal; font-size:13px; font-weight:700; border-radius:4px; padding:3px 8px; }
-  .i-up { color:#d92c20; background:#fdeceb; }
-  .i-down { color:#06894f; background:#e6f5ec; }
-  .row .fl { text-align:right; font-size:14px; font-weight:900; }
+  .row .sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; color:#8a93a3; min-width:0; }
+  .row .pct { text-align:right; white-space:nowrap; }
+  .row .pct i { font-style:normal; font-size:13px; font-weight:700; }
+  .i-up { color:#d92c20; }
+  .i-down { color:#06894f; }
+  .row .fl { text-align:right; font-size:14px; font-weight:900; white-space:nowrap; }
+
+  /* 单栏模式（JS 添加 .single）：≤720px 切单栏，>720px 贪心流双栏 */
+  .cards.single { display:block; }
+  .cards.single .card { margin-bottom:14px; }
+  .cards.single .card:last-child { margin-bottom:0; }
+  /* 窄窗口（≤820px）压缩列宽与字体，保证细分板块 / 龙虎榜数据不换行（不强制单栏，721–820px 仍保持双栏） */
+  @media (max-width: 820px) {
+    html,body { overflow-x:hidden; }
+    .stats { flex-wrap:wrap; }
+    .stat { flex:1 1 42%; min-width:150px; }
+    .stat .k { font-size:12px; }
+    .stat .v { font-size:24px; }
+    .stat .v small { font-size:12px; }
+    .tips { grid-template-columns:1fr; }
+    .sec { padding:18px 14px 8px; }
+    .card-h { padding:11px 14px; }
+    .card-h .sname { font-size:15px; }
+    .card-h .sflow { font-size:15px; }
+    .cols, .row { grid-template-columns:62px 1fr 56px 74px; padding:7px 12px; }
+    .row { padding:8px 12px; }
+    .cols { font-size:10px; }
+    .cols div:nth-child(1) { padding-right:10px; }
+    .row .nm { padding-right:10px; }
+    .row .nm b { font-size:13px; }
+    .row .sub { font-size:11px; }
+    .row .pct i { font-size:12px; }
+    .row .fl { font-size:12px; }
+  }
+
+  /* ≤720px 切单栏（>720px 由 JS 贪心流双栏） */
+  @media (max-width: 720px) {
+    .cards { display:block; }
+    .cards .card { margin-bottom:14px; }
+    .cards .card:last-child { margin-bottom:0; }
+  }
+
+  /* ≤375px 冻结：页面按 375px 宽度渲染，不再随窗口缩小而改动布局 */
+  @media (max-width: 375px) {
+    html,body { overflow-x:hidden; }
+    .page { min-width:375px; }
+  }
 
   /* ---------- insights ---------- */
   .tips { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -106,8 +150,9 @@
   <div class="hero">
     <div class="deco"></div><div class="deco2"></div>
     <div class="hero-top">
-      <span class="tag">同花顺 iFinD</span><span class="tag dark">龙虎榜数据</span><span class="tag dark" id="date-tag"></span>
+      <span class="tag">__LHB_SOURCE__</span><span class="tag dark">龙虎榜数据</span>
     </div>
+    <div class="hero-date" id="date-tag"></div>
     <h1 id="h1">龙虎榜 <span class="accent">·</span> 板块资金分布</h1>
     <div class="hero-sub" id="hero-sub"></div>
     <div class="hero-line"></div>
@@ -116,7 +161,7 @@
   <div class="stats" id="stats"></div>
 
   <div class="sec" id="sec-flow">
-    <div class="sec-head"><span class="sec-no">01</span><span class="sec-title">板块资金分布</span><span class="sec-note">单位：亿元 ｜ 按主力净流入排序</span></div>
+    <div class="sec-head"><span class="sec-no">01</span><span class="sec-title">板块资金分布</span><span class="sec-note">单位：亿元 ｜ 按__FLOW_SORT__排序</span></div>
     <div class="chart" id="chart"></div>
     <div class="chart-legend">
       <span class="lg"><i style="background:linear-gradient(90deg,#f06a5e,#e0392e)"></i>净流入（右）</span>
@@ -125,7 +170,7 @@
   </div>
 
   <div class="sec" id="sec-cards">
-    <div class="sec-head"><span class="sec-no">02</span><span class="sec-title">分板块个股明细</span><span class="sec-note">组内按主力净流入排序 ｜ 红涨绿跌</span></div>
+    <div class="sec-head"><span class="sec-no">02</span><span class="sec-title">分板块个股明细</span><span class="sec-note">组内按__FLOW_SORT__排序 ｜ 红涨绿跌</span></div>
     <div class="cards" id="cards"></div>
   </div>
 
@@ -137,23 +182,49 @@
   <div class="foot">
     <div class="ft">口径说明</div>
     <p id="foot-note"></p>
-    <p class="disc">数据来源：同花顺 iFinD ｜ 以上内容基于公开数据，不构成投资建议。</p>
+    <p class="disc">数据来源：__LHB_SOURCE__ ｜ 以上内容基于公开数据，不构成投资建议。</p>
   </div>
 
 </div>
 
-<!-- 数据注入占位：由 analyze_lhb.py 替换 __LHB_DATA__ -->
+<!-- 数据注入占位：由 analyze_lhb.py 替换 __LHB_DATA__（未替换时 JSON.parse 失败，回退到下方示例数据） -->
 <script id="lhb-data" type="application/json">__LHB_DATA__</script>
 
 <script>
-const DATA = JSON.parse(document.getElementById('lhb-data').textContent);
+/* 示例数据（仅模板预览用）：占位符未注入时保证页面可渲染，不会白屏 */
+const SAMPLE = {
+  "meta": {
+    "day": "20260901", "dateHyphen": "2026-09-01", "dateTag": "2026-09-01 · 星期一 · 收盘后（示例数据）",
+    "nStocks": 6, "nSectors": 2, "source": "示例数据", "flowK": "净买入",
+    "footNote": "① 示例数据，仅供模板预览；② 真实数据由 analyze_lhb.py 注入生成；③ 金额单位：亿元 / 万元。"
+  },
+  "stats": [
+    {"bar": "v", "k": "上榜个股", "v": 6, "unit": "只", "s": "收盘后口径", "cls": "c-mid"},
+    {"bar": "in", "k": "净买入个股", "v": 3, "unit": "只", "s": "合计 +2.05亿", "cls": "c-up"},
+    {"bar": "out", "k": "净卖出个股", "v": 3, "unit": "只", "s": "合计 -0.87亿", "cls": "c-down"},
+    {"bar": "net", "k": "龙虎榜整体", "v": 1.18, "unit": "亿元", "s": "净买入", "cls": "c-up"}
+  ],
+  "sectors": [
+    ["电子", 1.42e8, [["示例科技", "半导体", 5.3, 8600], ["示例光电", "光学光电子", -2.1, -3400]]],
+    ["医药", -8.7e7, [["示例生物", "化学制药", 3.2, 1200], ["示例医疗", "医疗器械", -4.5, -9100]]]
+  ],
+  "tips": [
+    {"color": "#e0392e", "title": "资金热度", "html": "示例科技 获净买入 <b class=\"r\">+0.86亿</b>，资金聚焦半导体方向。"},
+    {"color": "#0a9c5b", "title": "资金流出", "html": "示例医疗 遭净卖出 <b class=\"g\">0.91亿</b>，医疗器械方向承压。"}
+  ]
+};
+let DATA;
+try {
+  DATA = JSON.parse(document.getElementById('lhb-data').textContent);
+} catch (e) {
+  DATA = SAMPLE;
+}
 const SECTORS = DATA.sectors;
 
 document.getElementById('date-tag').textContent = DATA.meta.dateTag;
 document.getElementById('hero-sub').innerHTML =
-  `<b>${DATA.meta.nStocks}</b> 只上榜个股按同花顺行业整合为 <b>${DATA.meta.nSectors}</b> 个板块 ｜ 主力资金净流向一览`;
-document.getElementById('foot-note').innerHTML =
-  `① 数据为 ${DATA.meta.dateHyphen} 交易日收盘后维度；② 涨跌幅为前复权口径；③ 资金列为主力资金净流入额（正 = 净流入，负 = 净流出）；④ 板块归类采用同花顺行业分类（展示至二级/三级细分）；⑤ 金额单位：亿元 / 万元。`;
+  `<b>${DATA.meta.nStocks}</b> 只上榜个股按一级行业整合为 <b>${DATA.meta.nSectors}</b> 个板块 ｜ ${DATA.meta.flowK} 资金流向一览`;
+document.getElementById('foot-note').innerHTML = DATA.meta.footNote;
 
 /* ---- 统计卡片 ---- */
 DATA.stats.forEach(s => {
@@ -193,13 +264,13 @@ SECTORS.forEach(([name,flow])=>{
 });
 
 /* ---- section 02: sector cards ---- */
-const cards = document.getElementById('cards');
+const cardsEl = document.getElementById('cards');
+const sectorCards = [];
 SECTORS.forEach(([name,flow,stocks])=>{
   const card = document.createElement('div'); card.className='card';
-  let rows = stocks.map(([n,c,sub,chg,f,times])=>{
-    const badge = times?`<span class="badge2">${times}次上榜</span>`:'';
+  let rows = stocks.map(([n,sub,chg,f])=>{
     return `<div class="row">
-      <div class="nm"><b>${n}</b>${badge}<span>${c}</span></div>
+      <div class="nm"><b>${n}</b></div>
       <div class="sub">${sub}</div>
       <div class="pct"><i class="${pctCls(chg)}">${pctTxt(chg)}</i></div>
       <div class="fl ${flowCls(f)}">${fmtFlow(f)}</div>
@@ -209,10 +280,39 @@ SECTORS.forEach(([name,flow,stocks])=>{
       <span class="sname">${name}</span><span class="scnt">${stocks.length} 只上榜</span>
       <span class="sflow ${flowCls(flow)}">${fmtFlow(flow)}</span>
     </div>
-    <div class="cols"><div>个股 / 代码</div><div>细分板块</div><div>当日涨跌幅</div><div>主力净流入</div></div>
+    <div class="cols"><div>个股</div><div>细分板块</div><div>当日涨跌幅</div><div>__FLOW_HDR__</div></div>
     ${rows}`;
-  cards.appendChild(card);
+  sectorCards.push(card);
 });
+/* 布局：宽视口（>720px）→ 双栏贪心均衡（照片渲染固定 900px，恒双栏）；窄视口（≤720px）→ 单栏按原顺序 */
+const mqNarrow = window.matchMedia('(max-width: 720px)');
+const secCardsEl = document.getElementById('sec-cards');
+const cardsVisible = () => secCardsEl.offsetParent !== null;
+function layoutCards() {
+  if (!cardsVisible()) return;   // 明细区被 display:none 隐藏时 offsetHeight 全为 0，跳过避免全挤进第一列
+  cardsEl.innerHTML = '';
+  if (mqNarrow.matches) {
+    cardsEl.classList.add('single');
+    sectorCards.forEach(c => cardsEl.appendChild(c));
+  } else {
+    cardsEl.classList.remove('single');
+    const cols = [0, 1].map(() => {
+      const c = document.createElement('div'); c.className = 'col'; cardsEl.appendChild(c); return c;
+    });
+    sectorCards.forEach(card => {
+      const [l, r] = cols;
+      (l.offsetHeight <= r.offsetHeight ? l : r).appendChild(card);
+    });
+  }
+}
+window.addEventListener('load', layoutCards);
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(layoutCards);
+}
+mqNarrow.addEventListener('change', layoutCards);
+/* 明细区被外部切走 display 再切回（如渲染脚本切图）时，重新分流 */
+new MutationObserver(() => { if (cardsVisible()) layoutCards(); })
+  .observe(secCardsEl, { attributes: true, attributeFilter: ['style'] });
 document.title='ok';
 </script>
 </body>

@@ -28,7 +28,7 @@ const puppeteer = require('puppeteer');
   // 从页面内嵌 JSON 读取元信息（个股数 / 板块数 / 日期）
   const meta = await page.evaluate(() =>
     JSON.parse(document.getElementById('lhb-data').textContent).meta);
-  const { nStocks: N_STOCKS, nSectors: N_SECTORS, day } = meta;
+  const { nStocks: N_STOCKS, nSectors: N_SECTORS, day, flowK: FLOW_K } = meta;
   const out1 = path.resolve(argOut1 || path.join(path.dirname(pageHtml), `lhb_sector_flow_${day}.png`));
   const out2 = path.resolve(argOut2 || path.join(path.dirname(pageHtml), `lhb_stock_detail_${day}.png`));
 
@@ -48,14 +48,14 @@ const puppeteer = require('puppeteer');
   });
 
   // ---------- 图1：板块资金分布（hero + 统计 + 分布图 + 盘面要点） ----------
-  await page.evaluate(([n, m]) => {
+  await page.evaluate(([n, m, inK]) => {
     document.querySelector('h1').innerHTML = '龙虎榜 <span class="accent">·</span> 板块资金分布';
     document.querySelector('.hero-sub').innerHTML =
-      `<b>${n}</b> 只上榜个股按同花顺行业整合为 <b>${m}</b> 个板块 ｜ 主力资金净流向一览`;
+      `<b>${n}</b> 只上榜个股按一级行业整合为 <b>${m}</b> 个板块 ｜ ${inK} 资金流向一览`;
     document.querySelector('#sec-flow .sec-no').textContent = '01';
     document.querySelector('#sec-tips .sec-no').textContent = '02';
     document.querySelector('#sec-cards').style.display = 'none';  // 隐藏个股明细
-  }, [N_STOCKS, N_SECTORS]);
+  }, [N_STOCKS, N_SECTORS, FLOW_K]);
   await new Promise(r => setTimeout(r, 300));
   let i1 = await info();
   console.log('sector-flow img:', JSON.stringify(i1));
@@ -66,16 +66,16 @@ const puppeteer = require('puppeteer');
   console.log('saved:', out1);
 
   // ---------- 图2：分板块个股明细（hero + 明细卡片） ----------
-  await page.evaluate(n => {
+  await page.evaluate(([n, inK]) => {
     document.querySelector('h1').innerHTML = '龙虎榜 <span class="accent">·</span> 分板块个股明细';
     document.querySelector('.hero-sub').innerHTML =
-      `<b>${n}</b> 只上榜个股 ｜ 标注当日涨幅与主力资金流向 ｜ 组内按主力净流入排序`;
+      `<b>${n}</b> 只上榜个股 ｜ 标注当日涨幅与${inK} ｜ 组内按${inK}排序`;
     document.querySelector('#sec-cards .sec-no').textContent = '01';
     document.querySelector('#sec-cards').style.display = '';    // 显示个股明细
     document.querySelector('#stats').style.display = 'none';    // 隐藏统计卡片
     document.querySelector('#sec-flow').style.display = 'none';  // 隐藏板块资金分布
     document.querySelector('#sec-tips').style.display = 'none';  // 隐藏盘面要点
-  }, N_STOCKS);
+  }, [N_STOCKS, FLOW_K]);
   await new Promise(r => setTimeout(r, 300));
   let i2 = await info();
   console.log('stock-detail img:', JSON.stringify(i2));
